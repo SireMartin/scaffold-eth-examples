@@ -7,10 +7,11 @@
 //  added a very simple streaming mechanism where `onlySelf` can open a withdraw-based stream
 //
 
-pragma solidity ^0.6.7;
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "hardhat/console.sol";
 
 contract MetaMultiSigWallet {
     using ECDSA for bytes32;
@@ -38,11 +39,20 @@ contract MetaMultiSigWallet {
     }
 
     modifier onlySelf() {
+        logsender();
         require(msg.sender == address(this), "Not Self");
         _;
     }
 
+    function logsender() private view {
+        console.log("msg.sender = ", msg.sender);
+        console.log("tx.origin  = ", tx.origin);
+    }
+
     function addSigner(address newSigner, uint256 newSignaturesRequired) public onlySelf {
+        console.log("function addSigner:");
+        console.log("msg.sender = ", msg.sender);
+        console.log("tx.origin  = ", tx.origin);
         require(newSigner!=address(0), "addSigner: zero address");
         require(!isOwner[newSigner], "addSigner: owner not unique");
         require(newSignaturesRequired>0,"addSigner: must be non-zero sigs required");
@@ -59,7 +69,9 @@ contract MetaMultiSigWallet {
         emit Owner(oldSigner,isOwner[oldSigner]);
     }
 
-    function transferFunds(address payable to, uint256 value) public onlySelf {
+    function transferFunds(address payable to, uint256 value) public {
+        console.log("function transferFunds:");
+        logsender();
         require(address(this).balance > value, "Not enough funds in Wallet");
         emit TransferFunds(to, value);
         to.transfer(value);
@@ -91,9 +103,11 @@ contract MetaMultiSigWallet {
               validSignatures++;
             }
         }
-
+        console.log("function executeTransaction:");
+        logsender();
+        console.log("value = ", value);
+        //console.log("data  = ", data);
         require(validSignatures>=signaturesRequired, "executeTransaction: not enough valid signatures");
-
         (bool success, bytes memory result) = to.call{value: value}(data);
         require(success, "executeTransaction: tx failed");
 
@@ -113,7 +127,7 @@ contract MetaMultiSigWallet {
     //  new streaming stuff
     //
 
-    event OpenStream( address indexed to, uint256 amount, uint256 frequency );
+    /*event OpenStream( address indexed to, uint256 amount, uint256 frequency );
     event CloseStream( address indexed to );
     event Withdraw( address indexed to, uint256 amount, string reason );
 
@@ -138,7 +152,7 @@ contract MetaMultiSigWallet {
     }
 
     function streamBalance(address to) public view returns (uint256){
-      return (streams[to].amount * (block.timestamp-streams[to].last)) / streams[to].frequency;
+      return (streams[to].amount * (block.timestamp - streams[to].last)) / streams[to].frequency;
     }
 
     function openStream(address to, uint256 amount, uint256 frequency) public onlySelf {
@@ -158,7 +172,7 @@ contract MetaMultiSigWallet {
         _streamWithdraw(address(uint160(to)),streams[to].amount,"stream closed");
         delete streams[to];
         emit CloseStream( to );
-    }
+    }*/
 
 
 }

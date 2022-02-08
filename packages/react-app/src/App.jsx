@@ -12,10 +12,10 @@ import { useExchangePrice, useGasPrice, useUserProvider, useContractLoader, useC
 import { Transactor } from "./helpers";
 import { formatEther, parseEther } from "@ethersproject/units";
 //import Hints from "./Hints";
-import { Hints, ExampleUI, Subgraph } from "./views"
+import { Hints, ExampleUI, Subgraph } from "./views";
 import { useThemeSwitcher } from "react-css-theme-switcher";
 import { INFURA_ID, DAI_ADDRESS, DAI_ABI, NETWORK, NETWORKS } from "./constants";
-import { CreateTransaction, Transactions, Owners, FrontPage } from "./views"
+import { CreateTransaction, Transactions, Owners, FrontPage, Service } from "./views";
 
 /*
     Welcome to 🏗 scaffold-eth !
@@ -41,7 +41,7 @@ import { CreateTransaction, Transactions, Owners, FrontPage } from "./views"
 const targetNetwork = NETWORKS['localhost']; // <------- select your target frontend network (localhost, rinkeby, xdai, mainnet)
 
 // const poolServerUrl = "https://backend.multisig.holdings:49832/"
-const poolServerUrl = "http://localhost:49832/"
+const poolServerUrl = "http://172.18.107.85:49832/"
 
 // 😬 Sorry for all the console logging
 const DEBUG = true
@@ -53,8 +53,8 @@ if(DEBUG) console.log("📡 Connecting to Mainnet Ethereum");
 // const mainnetProvider = new InfuraProvider("mainnet",INFURA_ID);
 //
 // attempt to connect to our own scaffold eth rpc and if that fails fall back to infura...
-const scaffoldEthProvider = new JsonRpcProvider("https://rpc.scaffoldeth.io:48544")
-const mainnetInfura = new JsonRpcProvider("https://mainnet.infura.io/v3/" + INFURA_ID)
+const scaffoldEthProvider = undefined; //= new JsonRpcProvider("https://rpc.scaffoldeth.io:48544");
+const mainnetInfura = new JsonRpcProvider("https://mainnet.infura.io/v3/" + INFURA_ID);
 // ( ⚠️ Getting "failed to meet quorum" errors? Check your INFURA_I
 
 // 🏠 Your local provider is usually pointed at your local blockchain
@@ -109,7 +109,7 @@ function App(props) {
   // If you want to make 🔐 write transactions to your contracts, use the userProvider:
   const writeContracts = useContractLoader(userProvider)
 
-  const contractName = "MetaMultiSigWallet"
+  const contractName = "MultiSigService"
 
   //📟 Listen for broadcast events
   const executeTransactionEvents = useEventListener(readContracts, contractName, "ExecuteTransaction", localProvider, 1);
@@ -252,6 +252,9 @@ function App(props) {
           <Menu.Item key="/">
             <Link onClick={()=>{setRoute("/")}} to="/">MultiSig</Link>
           </Menu.Item>
+          <Menu.Item key="/service">
+            <Link onClick={()=>{setRoute("/service")}} to="/service">Service</Link>
+          </Menu.Item>
           <Menu.Item key="/owners">
             <Link onClick={()=>{setRoute("/owners")}} to="/owners">Owners</Link>
           </Menu.Item>
@@ -298,8 +301,26 @@ function App(props) {
               blockExplorer={blockExplorer}
             />
             */ }
-          <Route exact path="/owners">
+            <Route exact path="/owners">
             <Owners
+              contractName={contractName}
+              address={address}
+              userProvider={userProvider}
+              mainnetProvider={mainnetProvider}
+              localProvider={localProvider}
+              yourLocalBalance={yourLocalBalance}
+              price={price}
+              tx={tx}
+              writeContracts={writeContracts}
+              readContracts={readContracts}
+              blockExplorer={blockExplorer}
+              nonce={nonce}
+              ownerEvents={ownerEvents}
+              signaturesRequired={signaturesRequired}
+            />
+          </Route>
+          <Route exact path="/service">
+            <Service
               contractName={contractName}
               address={address}
               userProvider={userProvider}
@@ -348,11 +369,11 @@ function App(props) {
               blockExplorer={blockExplorer}
               nonce={nonce}
               signaturesRequired={signaturesRequired}
-            />
+            /> 
           </Route>
           <Route path="/debug">
             <Contract
-              name="MetaMultiSigWallet"
+              name={contractName}
               signer={userProvider.getSigner()}
               provider={localProvider}
               address={address}
