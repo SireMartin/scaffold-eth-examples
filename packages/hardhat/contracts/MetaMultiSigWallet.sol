@@ -7,10 +7,10 @@
 //  added a very simple streaming mechanism where `onlySelf` can open a withdraw-based stream
 //
 
-pragma solidity ^0.6.7;
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 contract MetaMultiSigWallet {
     using ECDSA for bytes32;
@@ -113,7 +113,7 @@ contract MetaMultiSigWallet {
     //  new streaming stuff
     //
 
-    event OpenStream( address indexed to, uint256 amount, uint256 frequency );
+    /*event OpenStream( address indexed to, uint256 amount, uint256 frequency );
     event CloseStream( address indexed to );
     event Withdraw( address indexed to, uint256 amount, string reason );
 
@@ -159,6 +159,6 @@ contract MetaMultiSigWallet {
         delete streams[to];
         emit CloseStream( to );
     }
-
+*/
 
 }
