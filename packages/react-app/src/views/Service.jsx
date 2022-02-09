@@ -6,6 +6,7 @@ import { Address, AddressInput, Balance, Blockie } from "../components";
 import { parseEther, formatEther } from "@ethersproject/units";
 import { ethers } from "ethers";
 import { useContractReader, useEventListener, useLocalStorage } from "../hooks";
+import { FACTORY_ADDRESS } from "@uniswap/sdk";
 const { Option } = Select;
 
 export default function Service({contractName, ownerEvents, signaturesRequired, address, nonce, userProvider, mainnetProvider, localProvider, yourLocalBalance, price, tx, readContracts, writeContracts, blockExplorer }) {
@@ -18,15 +19,13 @@ export default function Service({contractName, ownerEvents, signaturesRequired, 
   const [newOwner, setNewOwner] = useLocalStorage("newOwner");
   const [newSignaturesRequired, setNewSignaturesRequired] = useLocalStorage("newSignaturesRequired");
   const [data, setData] = useLocalStorage("data","0x");
-  var currentNonce = 111;
+  const [currentNonce, setCurrentNonce] = useState(); //state waarden binnen deze component
 
-  useEffect(async() =>{
-    let mounted = true;
-    if(mounted){
-      currentNonce = readContracts[contractName].currentNonce();
-    }
-    return () => mounted = false;
-  });
+  //wordt uitgevoerd bij mounten en unmounten deze service component
+  useEffect(async() => {
+      setCurrentNonce(await readContracts[contractName].currentNonce()); //alles behalve de return wordt uitgevoerd bij mounten
+      //return fct() voert cleanup actie uit bij unmounten (enkel de return)
+  }/*, [dependency]*/); //dependency: als deze value wijzigt wordt useEffect opnieuw opgeroepen
 
   return (
     <div>
