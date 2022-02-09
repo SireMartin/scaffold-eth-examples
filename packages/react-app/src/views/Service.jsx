@@ -18,9 +18,19 @@ export default function Service({contractName, ownerEvents, signaturesRequired, 
   const [newOwner, setNewOwner] = useLocalStorage("newOwner");
   const [newSignaturesRequired, setNewSignaturesRequired] = useLocalStorage("newSignaturesRequired");
   const [data, setData] = useLocalStorage("data","0x");
+  var currentNonce = 111;
+
+  useEffect(async() =>{
+    let mounted = true;
+    if(mounted){
+      currentNonce = readContracts[contractName].currentNonce();
+    }
+    return () => mounted = false;
+  });
 
   return (
     <div>
+      <h1> current Nonce = { currentNonce } </h1>
       <h2 style={{marginTop:32}}>Signatures Required: {signaturesRequired?signaturesRequired.toNumber():<Spin></Spin>}</h2>
       <List
         style={{maxWidth:400,margin:"auto",marginTop:32}}
@@ -46,15 +56,15 @@ export default function Service({contractName, ownerEvents, signaturesRequired, 
       <div style={{border:"1px solid #cccccc", padding:16, width:400, margin:"auto",marginTop:64}}>
         <div style={{margin:8,padding:8}}>
           <Select value={methodName} style={{ width: "100%" }} onChange={ setMethodName }>
-            <Option key="addSigner">addSigner()</Option>
-            <Option key="removeSigner">removeSigner()</Option>
+            <Option key="addSigner">Add Signer</Option>
+            <Option key="removeSigner">Remove Signer</Option>
           </Select>
         </div>
         <div style={{margin:8,padding:8}}>
           <AddressInput
             autoFocus
             ensProvider={mainnetProvider}
-            placeholder="new owner address"
+            placeholder="signer address"
             value={newOwner}
             onChange={setNewOwner}
           />
@@ -68,7 +78,7 @@ export default function Service({contractName, ownerEvents, signaturesRequired, 
           />
         </div>
         <div style={{margin:8,padding:8}}>
-          <Button onClick={()=>{
+          <Button onClick={async ()=>{
             console.log("METHOD",setMethodName)
             let calldata = readContracts[contractName].interface.encodeFunctionData(methodName,[newOwner,newSignaturesRequired])
             console.log("calldata",calldata)
