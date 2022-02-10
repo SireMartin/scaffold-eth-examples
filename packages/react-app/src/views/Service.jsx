@@ -4,9 +4,10 @@ import { Select, Button, List, Divider, Input, Card, DatePicker, Slider, Switch,
 import { SyncOutlined } from '@ant-design/icons';
 import { Address, AddressInput, Balance, Blockie } from "../components";
 import { parseEther, formatEther } from "@ethersproject/units";
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import { useContractReader, useEventListener, useLocalStorage } from "../hooks";
 import { FACTORY_ADDRESS } from "@uniswap/sdk";
+import { _fetchData } from "ethers/lib/utils";
 const { Option } = Select;
 
 export default function Service({contractName, ownerEvents, signaturesRequired, address, nonce, userProvider, mainnetProvider, localProvider, yourLocalBalance, price, tx, readContracts, writeContracts, blockExplorer }) {
@@ -19,17 +20,41 @@ export default function Service({contractName, ownerEvents, signaturesRequired, 
   const [newOwner, setNewOwner] = useLocalStorage("newOwner");
   const [newSignaturesRequired, setNewSignaturesRequired] = useLocalStorage("newSignaturesRequired");
   const [data, setData] = useLocalStorage("data","0x");
-  const [currentNonce, setCurrentNonce] = useState(); //state waarden binnen deze component
+  const [currentNonce, setCurrentNonce] = useState(2); //state waarden binnen deze component
+  const [currentMultiSig, setCurrentMultiSig] = useState();
+  const [currentSigners, setCurrentSigners] = useState();
+  const [currentBalance, setCurrentBalance] = useState();
 
   //wordt uitgevoerd bij mounten en unmounten deze service component
-  useEffect(async() => {
-      setCurrentNonce(await readContracts[contractName].currentNonce()); //alles behalve de return wordt uitgevoerd bij mounten
-      //return fct() voert cleanup actie uit bij unmounten (enkel de return)
-  }/*, [dependency]*/); //dependency: als deze value wijzigt wordt useEffect opnieuw opgeroepen
+  useEffect(() => {
+    async function fetchNonce(){
+      if(readContracts && readContracts[contractName]){
+        var cn = await readContracts[contractName].currentNonce();
+        console.log("current nonce = ", cn);
+        setCurrentNonce(cn.toNumber());
+        
+        var ms = await readContracts[contractName].multiSigColl(1);
+        console.log("current multisig = ", ms);
+        setCurrentMultiSig(ms);
+
+        var k = await readContracts[contractName].getSigners(1);
+        console.log("current signers = ", k);
+        setCurrentSigners(k);
+
+        var p = await readContracts[contractName].balances(ms[3]);
+        console.log("current balance = ", p);
+        setCurrentBalance(formatEther(p));
+      }
+    }
+    fetchNonce();
+  });
 
   return (
     <div>
-      <h1> current Nonce = { currentNonce } </h1>
+      <h1> current nonce    = {JSON.stringify(currentNonce)} </h1>
+      <h1> current multisig = {JSON.stringify(currentMultiSig)} </h1>
+      <h1> current signers  = {JSON.stringify(currentSigners)} </h1>
+      <h1> curent balance   = {JSON.stringify(currentBalance)} </h1>
       <h2 style={{marginTop:32}}>Signatures Required: {signaturesRequired?signaturesRequired.toNumber():<Spin></Spin>}</h2>
       <List
         style={{maxWidth:400,margin:"auto",marginTop:32}}

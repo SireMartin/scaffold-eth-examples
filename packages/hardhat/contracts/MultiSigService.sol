@@ -46,11 +46,10 @@ contract MultiSigService {
         _;
     }
 
-    /*function getSigners(uint argNonce) public view returns (address[] memory)
+    function getSigners(uint argNonce) public view returns (SignerInfo[] memory)
     {
-        SignerInfo[] memory temp = multiSigColl[argNonce].signers;
-        return temp;
-    }*/
+        return multiSigColl[argNonce].signers;
+    }
 
     function addMultiSig(address payable argTo, uint8 argQtyReqSig, address[] memory argSigners, bytes32 argHash, bytes memory argSig) public payable returns (uint) 
     {
@@ -158,5 +157,9 @@ contract MultiSigService {
     receive() external payable 
     {
         balances[msg.sender] += msg.value;
+    }
+
+    function getGetal() public view returns (uint8){
+        return 8;
     }
 }
