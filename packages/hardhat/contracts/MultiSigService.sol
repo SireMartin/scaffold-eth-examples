@@ -9,7 +9,7 @@ contract MultiSigService {
     struct SignerInfo 
     {
         address addr;   //the address of the singer, added by nonce owner calling addSigner
-        bytes sig;  //the signer signature of the MultiSig.hash
+        bool hasSigned;  //did the address already sign?
     }
     struct MultiSig 
     {
@@ -19,19 +19,20 @@ contract MultiSigService {
         address owner;  //the creator of the MultiSig, which also signs the hash when creating a new multisig contract by calling addMultiSig()
         uint amount;    //value the beneficiary receives when multisig is completed, this value is sent when the addMultiSig is called to create a new MultiSig
         bytes32 hash;   //hash of nonce, to and value
-        bytes sig;  //the owners signature of the hash
+        string shortDescription;    //the goal of the MultiSig
         SignerInfo[] signers;
     }
 
-    //todo: make private
     uint public currentNonce;
+    uint public chainId;
 
     mapping(uint => MultiSig) public multiSigColl; //nonce to multisig contract
     mapping(address => uint) public balances;    //balances per multisig creator for contract execution of transfers
 
-    constructor()
+    constructor(uint argChainId)
     {
         currentNonce = 1; //we start the nonce at 1, because this is the url param and you don't want 0 as a param
+        chainId = argChainId;
     }
 
     modifier onlyOwner(uint argNonce)
@@ -51,7 +52,12 @@ contract MultiSigService {
         return multiSigColl[argNonce].signers;
     }
 
-    function addMultiSig(address payable argTo, uint8 argQtyReqSig, address[] memory argSigners, bytes32 argHash, bytes memory argSig) public payable returns (uint) 
+    function calculateHash(uint argNonce, address argTo, uint argValue) public view returns (bytes32)
+    {
+        return keccak256(abi.encodePacked(address(this), chainId, argNonce, argTo, argValue));
+    }
+
+    function addMultiSig(address payable argTo, uint8 argQtyReqSig, address[] memory argSigners, bytes32 argHash, string memory argDesc) public payable returns (uint) 
     {
         console.log("entering addMultiSig()");
         console.log("param argTo = ", argTo);
@@ -61,9 +67,7 @@ contract MultiSigService {
             console.log("param argSigner = ", argSigners[i]);
         }
         console.logBytes32(argHash);
-        console.logBytes(argSig);
-
-
+        
         require(msg.value != 0, "You must provide value to this call");
         //this would be easier but error : Invalid type for argument in function call. Invalid implicit conversion from struct MultiSigService.SignerInfo memory[1] memory to struct MultiSigService.SignerInfo memory[] memory requested
         //multiSigColl[nonce] = MultiSig({isCompleted: false, to: argTo, qtyReqSig: argQtyReqSig, amount: msg.value, hash: argHash, signers: [ SignerInfo({isOwner: true, addr: msg.sender, sig: argSig}) ] });
@@ -73,19 +77,19 @@ contract MultiSigService {
         newMultiSig.qtyReqSig = argQtyReqSig;
         newMultiSig.to = argTo;
         newMultiSig.amount = msg.value;
-        newMultiSig.hash = argHash;
-        newMultiSig.sig = argSig;
+        newMultiSig.hash = calculateHash(currentNonce, newMultiSig.to, newMultiSig.amount);
         newMultiSig.owner = msg.sender;
+        newMultiSig.shortDescription = argDesc;
         for(uint i = 0; i < argSigners.length; ++i)
         {
-            newMultiSig.signers.push(SignerInfo(argSigners[i], ""));
+            newMultiSig.signers.push(SignerInfo(argSigners[i], false));
         }
         return currentNonce++;
     }
 
     function getIndexOfSigner(uint argNonce, address argAddr) private view nonceExists(argNonce) returns (uint)
     {
-        //i hope the compile optimises this
+        //i hope the compiler optimises this
         for(uint i = 0; i < multiSigColl[argNonce].signers.length; ++i)
         {
             if(multiSigColl[argNonce].signers[i].addr == argAddr)
@@ -106,11 +110,11 @@ contract MultiSigService {
             if(multiSigColl[argNonce].signers[i].addr == address(0))
             {
                 multiSigColl[argNonce].signers[i].addr = argAddr;
-                //multiSigColl[argNonce].signers[i].sig = "";
+                //multiSigColl[argNonce].signers[i].hasSigned = false;
                 return;
             }
         }
-        multiSigColl[argNonce].signers.push(SignerInfo(argAddr, ""));
+        multiSigColl[argNonce].signers.push(SignerInfo(argAddr, false));
         multiSigColl[argNonce].qtyReqSig = argQtyReqSig;
     }
 
@@ -119,7 +123,7 @@ contract MultiSigService {
         uint signerIndex = getIndexOfSigner(argNonce, argAddr);
         require(signerIndex != type(uint).max, "not able to remove unregistered signer");
         multiSigColl[argNonce].signers[signerIndex].addr = address(0);
-        multiSigColl[argNonce].signers[signerIndex].sig = "";
+        multiSigColl[argNonce].signers[signerIndex].hasSigned = false;
         multiSigColl[argNonce].qtyReqSig = argQtyReqSig;
     }
 
@@ -129,7 +133,7 @@ contract MultiSigService {
         require(msg.sender == multiSigColl[argNonce].hash.recover(argSig), "signer is not the sender of this message");
         uint signerIndex = getIndexOfSigner(argNonce, msg.sender);
         require(signerIndex != type(uint).max, "you are not registered as a signer for this multisig");
-        multiSigColl[argNonce].signers[signerIndex].sig = argSig;
+        multiSigColl[argNonce].signers[signerIndex].hasSigned = true;
     }
 
     //if enough signers, the contract executes the payment and credits the transaction to the owner of this multisig instance
@@ -141,7 +145,7 @@ contract MultiSigService {
         uint8 qtyValidSig = 1;
         for(uint i = 0; i < multiSigColl[argNonce].signers.length; ++i)
         {
-            if(multiSigColl[argNonce].signers[i].sig.length != 0)
+            if(multiSigColl[argNonce].signers[i].hasSigned)
             {
                 ++qtyValidSig;
             }
@@ -159,7 +163,8 @@ contract MultiSigService {
         balances[msg.sender] += msg.value;
     }
 
-    function getGetal() public view returns (uint8){
+    function getGetal() public pure returns (uint8)
+    {
         return 8;
     }
 }
