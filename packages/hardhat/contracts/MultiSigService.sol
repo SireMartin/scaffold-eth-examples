@@ -6,7 +6,7 @@ import "hardhat/console.sol";
 contract MultiSigService {
     using ECDSA for bytes32;
 
-    struct SignerInfo 
+    struct SignerInfo
     {
         address addr;   //the address of the singer, added by nonce owner calling addSigner
         bool hasSigned;  //did the address already sign?
@@ -23,15 +23,28 @@ contract MultiSigService {
         SignerInfo[] signers;
     }
 
+    struct NonceInfo
+    {
+        uint nonce;
+        bool isValid;   //true if owner or valid signer, false if signer has been removed (entries in NonceInfo will not be deleted when signer is removed, but markd as invalid)
+    }
+
+    struct OwnerInfo
+    {
+        uint balance;           //owners balance for the contract to perform transactions with
+        uint[] ownedNonceColl;  //the owners nonces (= instances of a multisig)
+    }
+
+    mapping(uint => MultiSig) public multiSigColl;          //nonce to multisig contract
+    mapping(address => OwnerInfo) public ownerInfoColl;  //balance to perform multisig execution on behalf of the owner + references to it's nonces (multisig instances created by the owner)
+    mapping(address => NonceInfo[]) public signerInfoColl;   //associates signers to nonces, which are keys to multisig instances
+
     uint public currentNonce;
     uint public chainId;
 
-    mapping(uint => MultiSig) public multiSigColl; //nonce to multisig contract
-    mapping(address => uint) public balances;    //balances per multisig creator for contract execution of transfers
-
-    constructor(uint argChainId)
+    constructor(uint argChainId, uint argInitialNonce)
     {
-        currentNonce = 1; //we start the nonce at 1, because this is the url param and you don't want 0 as a param
+        currentNonce = argInitialNonce;
         chainId = argChainId;
     }
 
@@ -50,6 +63,16 @@ contract MultiSigService {
     function getSigners(uint argNonce) public view returns (SignerInfo[] memory)
     {
         return multiSigColl[argNonce].signers;
+    }
+
+    function getOwnedNonces(address argAddress) public view returns (uint[] memory)
+    {
+        return ownerInfoColl[argAddress].ownedNonceColl;
+    }
+
+    function getNoncesToSign(address argAddress) public view returns (NonceInfo[] memory)
+    {
+        return signerInfoColl[argAddress];
     }
 
     function calculateHash(uint argNonce, address argTo, uint argValue) public view returns (bytes32)
@@ -83,7 +106,11 @@ contract MultiSigService {
         for(uint i = 0; i < argSigners.length; ++i)
         {
             newMultiSig.signers.push(SignerInfo(argSigners[i], false));
+            //register the nonce to the signer
+            signerInfoColl[argSigners[i]].push(NonceInfo(currentNonce, true));
         }
+        //register the nonce to the creator of the multisig instance
+        ownerInfoColl[msg.sender].ownedNonceColl.push(currentNonce);
         return currentNonce++;
     }
 
@@ -105,6 +132,12 @@ contract MultiSigService {
     {
         uint signerIndex = getIndexOfSigner(argNonce, argAddr);
         require(signerIndex == type(uint).max, "signer is already registered for this multisig");
+        multiSigColl[argNonce].qtyReqSig = argQtyReqSig;
+        
+        //register the nonce to the signer
+        signerInfoColl[argAddr].push(NonceInfo(argNonce, true));
+        
+        //first check if the new signer can take the space of a previously removed signer
         for(uint i = 0; i < multiSigColl[argNonce].signers.length; ++i)
         {
             if(multiSigColl[argNonce].signers[i].addr == address(0))
@@ -115,7 +148,6 @@ contract MultiSigService {
             }
         }
         multiSigColl[argNonce].signers.push(SignerInfo(argAddr, false));
-        multiSigColl[argNonce].qtyReqSig = argQtyReqSig;
     }
 
     function removeSigner(uint argNonce, address argAddr, uint8 argQtyReqSig) public onlyOwner(argNonce)
@@ -125,6 +157,17 @@ contract MultiSigService {
         multiSigColl[argNonce].signers[signerIndex].addr = address(0);
         multiSigColl[argNonce].signers[signerIndex].hasSigned = false;
         multiSigColl[argNonce].qtyReqSig = argQtyReqSig;
+
+        bool nonceRemovedForSigner = false;
+        for(uint i; i < signerInfoColl[argAddr].length; ++i)
+        {
+            if(signerInfoColl[argAddr][i].nonce == argNonce)
+            {
+                signerInfoColl[argAddr][i].isValid = false;
+                nonceRemovedForSigner = true;
+            }    
+        }
+        require(nonceRemovedForSigner, "signer was removed from multisig instance, but unable to remove its nonce reference, probabely a bug in signer nonce ref");
     }
 
     //check for this address to exist as a signer and if so add signature
@@ -154,13 +197,13 @@ contract MultiSigService {
         uint contractValueBefore = address(this).balance;
         (bool success, bytes memory result) = multiSigColl[argNonce].to.call{value: multiSigColl[argNonce].amount}("");
         require(success, "executeTransaction: failed to transfer value for this multisig");
-        balances[msg.sender] -= contractValueBefore - address(this).balance - multiSigColl[argNonce].amount;
+        ownerInfoColl[msg.sender].balance -= contractValueBefore - address(this).balance - multiSigColl[argNonce].amount;
     }
 
     //multisig instance creator adds credits to the contract for execution of its transfers
     receive() external payable 
     {
-        balances[msg.sender] += msg.value;
+        ownerInfoColl[msg.sender].balance += msg.value;
     }
 
     function getGetal() public pure returns (uint8)

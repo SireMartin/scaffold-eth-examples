@@ -13,7 +13,7 @@ const main = async () => {
                     // 0xbB69eAb3c34A368151277823e36921Fb366EaE1e (ropsten/rinkeby)
                     // 0x22d63804D00b4B2BF3dE7Dd21c22aD839E62f920 (meta-wallet)
 
-  const MetaMultiSigWallet = await deploy("MultiSigService");
+  const MetaMultiSigWallet = await deploy("MultiSigService", [31337, 1] );
 
   //const yourContract = await deploy("YourContract") // <-- add in constructor args like line 19 vvvv
 

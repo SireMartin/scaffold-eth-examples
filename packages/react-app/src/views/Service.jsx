@@ -8,6 +8,8 @@ import { BigNumber, ethers } from "ethers";
 import { useContractReader, useEventListener, useLocalStorage } from "../hooks";
 import { FACTORY_ADDRESS } from "@uniswap/sdk";
 import { _fetchData } from "ethers/lib/utils";
+import { useBalance } from "../hooks";
+
 const { Option } = Select;
 
 export default function Service({contractName, ownerEvents, signaturesRequired, address, nonce, userProvider, mainnetProvider, localProvider, yourLocalBalance, price, tx, readContracts, writeContracts, blockExplorer }) {
@@ -24,37 +26,45 @@ export default function Service({contractName, ownerEvents, signaturesRequired, 
   const [currentMultiSig, setCurrentMultiSig] = useState();
   const [currentSigners, setCurrentSigners] = useState();
   const [currentBalance, setCurrentBalance] = useState();
+  const [contractBalance, setContractBalance] = useState();
 
   //wordt uitgevoerd bij mounten en unmounten deze service component
   useEffect(() => {
     async function fetchNonce(){
       if(readContracts && readContracts[contractName]){
-        var cn = await readContracts[contractName].currentNonce();
+        var cn = readContracts && await readContracts[contractName].currentNonce();
         console.log("current nonce = ", cn);
         setCurrentNonce(cn.toNumber());
         
-        var ms = await readContracts[contractName].multiSigColl(1);
+        var ms = readContracts && await readContracts[contractName].multiSigColl(1);
         console.log("current multisig = ", ms);
         setCurrentMultiSig(ms);
 
-        var k = await readContracts[contractName].getSigners(1);
+        var k = readContracts && await readContracts[contractName].getSigners(1);
         console.log("current signers = ", k);
         setCurrentSigners(k);
 
-        var p = await readContracts[contractName].balances(ms[3]);
-        console.log("current balance = ", p);
-        setCurrentBalance(formatEther(p));
+        var p = readContracts && await readContracts[contractName].ownerInfoColl(address);
+        console.log("your current balance = ", p.balance);
+        setCurrentBalance(formatEther(p.balance));
+
+        var ad = readContracts && readContracts[contractName].address;
+        var z = await userProvider.getBalance(ad);
+        var e = formatEther(z);
+        setContractBalance(e);
       }
     }
     fetchNonce();
-  });
+  }, []);
 
   return (
     <div>
       <h1> current nonce    = {JSON.stringify(currentNonce)} </h1>
       <h1> current multisig = {JSON.stringify(currentMultiSig)} </h1>
       <h1> current signers  = {JSON.stringify(currentSigners)} </h1>
-      <h1> curent balance   = {JSON.stringify(currentBalance)} </h1>
+      <h1> your balance     = {JSON.stringify(currentBalance)} </h1>
+      <h1> contract balance = {JSON.stringify(useBalance(userProvider, readContracts[contractName].address))} </h1>
+      <h1> contract balance = {JSON.stringify(contractBalance)} </h1>
       <h2 style={{marginTop:32}}>Signatures Required: {signaturesRequired?signaturesRequired.toNumber():<Spin></Spin>}</h2>
       <List
         style={{maxWidth:400,margin:"auto",marginTop:32}}
