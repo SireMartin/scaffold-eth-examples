@@ -80,7 +80,7 @@ contract MultiSigService {
         return keccak256(abi.encodePacked(address(this), chainId, argNonce, argTo, argValue));
     }
 
-    function addMultiSig(address payable argTo, uint8 argQtyReqSig, address[] memory argSigners, bytes32 argHash, string memory argDesc) public payable returns (uint) 
+    function addMultiSig(address payable argTo, uint8 argQtyReqSig, address[] memory argSigners, string memory argDesc) public payable returns (uint) 
     {
         console.log("entering addMultiSig()");
         console.log("param argTo = ", argTo);
@@ -89,7 +89,6 @@ contract MultiSigService {
         {
             console.log("param argSigner = ", argSigners[i]);
         }
-        console.logBytes32(argHash);
         
         require(msg.value != 0, "You must provide value to this call");
         //this would be easier but error : Invalid type for argument in function call. Invalid implicit conversion from struct MultiSigService.SignerInfo memory[1] memory to struct MultiSigService.SignerInfo memory[] memory requested

@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
-import { Select, Button, List, Divider, Input, Card, DatePicker, Slider, Switch, Progress, Spin } from "antd";
+import { Select, Button, List, Divider, Input, Card, DatePicker, Slider, Switch, Progress, Spin, Row, Col, Tooltip } from "antd";
 import { SyncOutlined } from '@ant-design/icons';
 import { Address, AddressInput, Balance, Blockie } from "../components";
-import { parseEther, formatEther } from "@ethersproject/units";
+import { parseEther, parseUnits, formatEther } from "@ethersproject/units";
 import { BigNumber, ethers } from "ethers";
 import { useContractReader, useEventListener, useLocalStorage } from "../hooks";
 import { FACTORY_ADDRESS } from "@uniswap/sdk";
@@ -26,11 +26,13 @@ export default function Service({contractName, ownerEvents, signaturesRequired, 
   const [currentSigners, setCurrentSigners] = useState();
   const [currentBalance, setCurrentBalance] = useState();
   const [contractBalance, setContractBalance] = useState();
+  const [calcHash, setCalcHash] = useState();
 
   const [rewardReceiver, setRewardReceiver] = useLocalStorage("rewardReceiver");
   const [challengeDescription, setChallengeDescription] = useLocalStorage("newChallengeDescription");
   const [rewardValue, setRewardValue] = useLocalStorage("rewardValue");
   const [qtySignatureRequired, setQtySignatureRequired] = useLocalStorage("qtySignatureRequired");
+  const [uploadCreditValue, setUploadCreditValue] = useLocalStorage("uploadCreditValue");
 
   //wordt uitgevoerd bij mounten en unmounten deze service component
   useEffect(() => {
@@ -49,8 +51,8 @@ export default function Service({contractName, ownerEvents, signaturesRequired, 
         setCurrentSigners(k);
 
         var p = await readContracts[contractName].ownerInfoColl(address);
-        console.log("your current balance = ", p.balance);
-        setCurrentBalance(formatEther(p.balance));
+        console.log("p = ", p);
+        setCurrentBalance(formatEther(p));
 
         var ad = await readContracts[contractName].address;
         var z = await userProvider.getBalance(ad);
@@ -59,16 +61,50 @@ export default function Service({contractName, ownerEvents, signaturesRequired, 
       }
     }
     fetchNonce();
-  }, []);
+  }, [calcHash]);
 
   return (
-    <div>
-      <h1> current nonce    = {JSON.stringify(currentNonce)} </h1>
-      <h1> current multisig = {JSON.stringify(currentMultiSig)} </h1>
-      <h1> current signers  = {JSON.stringify(currentSigners)} </h1>
-      <h1> your balance     = {JSON.stringify(currentBalance)} </h1>
-      <h1> contract balance = {JSON.stringify(useBalance(userProvider, readContracts[contractName].address))} </h1>
-      <h1> contract balance = {JSON.stringify(contractBalance)} </h1>
+    <div style={{ margin: "auto", width: "40vw" }}>
+      <div>
+        your credits : {currentBalance}
+      </div>
+
+      <div>
+        upload credits:
+      </div>
+
+      <div style={{ margin: 2 }}>
+        <Input
+          placeholder="transaction credit upload value"
+          onChange={e => setUploadCreditValue(e.target.value)}
+          value={uploadCreditValue}
+          addonAfter={
+            <div>
+              <Tooltip placement="right" title={" * 10^18 "}>
+                <div
+                  type="dashed"
+                  style={{ cursor: "pointer" }}
+                  onClick={async () => {
+                    let floatValue = parseFloat(uploadCreditValue)
+                    if(floatValue) setUploadCreditValue("" + floatValue * 10 ** 18);
+                  }}
+                >
+                  ✳️
+                </div>
+              </Tooltip>
+            </div>
+          }
+        />
+      </div>
+
+      <div style={{margin:8,padding:8}}>
+        <Button onClick={async ()=>{
+          console.log("uploadCreditValue = ", uploadCreditValue);
+          tx({to: writeContracts[contractName].address, value: parseUnits("" + uploadCreditValue, "wei")});
+        }}>
+        Upload Credits
+        </Button>
+      </div>  
 
       <div style={{margin:8,padding:8}}>
         <Input
@@ -96,35 +132,18 @@ export default function Service({contractName, ownerEvents, signaturesRequired, 
           value={rewardValue}
           addonAfter={
             <div>
-              <Row>
-                <Col span={16}>
-                  <Tooltip placement="right" title={" * 10^18 "}>
-                    <div
-                      type="dashed"
-                      style={{ cursor: "pointer" }}
-                      onClick={async () => {
-                        let floatValue = parseFloat(txValue)
-                        if(floatValue) setRewardValue("" + floatValue * 10 ** 18);
-                      }}
-                    >
-                      ✳️
-                    </div>
-                  </Tooltip>
-                </Col>
-                <Col span={16}>
-                  <Tooltip placement="right" title={"number to hex"}>
-                    <div
-                      type="dashed"
-                      style={{ cursor: "pointer" }}
-                      onClick={async () => {
-                        setRewardValue(BigNumber.from(txValue).toHexString());
-                      }}
-                    >
-                      #️⃣
-                  </div>
-                  </Tooltip>
-                </Col>
-              </Row>
+              <Tooltip placement="right" title={" * 10^18 "}>
+                <div
+                  type="dashed"
+                  style={{ cursor: "pointer" }}
+                  onClick={async () => {
+                    let floatValue = parseFloat(rewardValue)
+                    if(floatValue) setRewardValue("" + floatValue * 10 ** 18);
+                  }}
+                >
+                  ✳️
+                </div>
+              </Tooltip>
             </div>
           }
         />
@@ -142,16 +161,25 @@ export default function Service({contractName, ownerEvents, signaturesRequired, 
       <div style={{margin:8,padding:8}}>
         <Button onClick={async ()=>{
           console.log("METHOD",setMethodName)
-          let calldata = readContracts[contractName].interface.encodeFunctionData(methodName,[newOwner,newSignaturesRequired])
+          console.log("rewardReceiver, rewardValue, qtySignatureRequired = ", rewardReceiver, rewardValue);
+          var hash = await readContracts[contractName].calculateHash(1, rewardReceiver, rewardValue);
+          console.log("hash = ", hash);
+          const overrides = {};
+          overrides.value = parseUnits("" + rewardValue, "wei");
+          tx(
+            writeContracts[contractName].addMultiSig(rewardReceiver, qtySignatureRequired, [rewardReceiver, "0x5FbDB2315678afecb367f032d93F642f64180aa3"], "maarten is the best", overrides)
+          );
+          setCalcHash(hash);
+          /*let calldata = readContracts[contractName].interface.encodeFunctionData(methodName,[newOwner,newSignaturesRequired])
           console.log("calldata",calldata)
           setData(calldata)
           setAmount("0")
           setTo(readContracts[contractName].address)
           setTimeout(()=>{
             history.push('/create')
-          },777)
+          },777)*/
         }}>
-        Create Tx
+        Create New MultiSig Instance
         </Button>
       </div>
     </div>
