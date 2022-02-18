@@ -106,6 +106,18 @@ contract MultiSigService {
         newMultiSig.shortDescription = argDesc;
         for(uint i = 0; i < argSigners.length; ++i)
         {
+            console.log("signers.length = ", argSigners.length);
+            //back-end check on signer redundancy
+            bool doesNotOccur = true;
+            for(uint j = 0; j < newMultiSig.signers.length; ++j)
+            {
+                if(newMultiSig.signers[j].addr == argSigners[i])
+                {
+                    doesNotOccur = false;
+                    break;
+                }
+            }
+            require(doesNotOccur, "redundant signers are not allowed");
             newMultiSig.signers.push(SignerInfo(argSigners[i], false));
             //register the nonce to the signer
             addSignerToNonce(currentNonce, argSigners[i]);
@@ -166,11 +178,12 @@ contract MultiSigService {
     //check for this address to exist as a signer and if so add signature
     function sign(uint argNonce, bytes memory argSig) public nonceExists(argNonce)
     {
+        console.log("argNonce = ", argNonce);
         console.log("hash");
         console.logBytes32(multiSigColl[argNonce].hash);
         console.log("sig");
         console.logBytes(argSig);
-        address recoveredAddress = multiSigColl[argNonce].hash.recover(argSig);
+        address recoveredAddress = multiSigColl[argNonce].hash.toEthSignedMessageHash().recover(argSig);
         console.log("recoveredAddress = ", recoveredAddress);
         uint indexOfSigner = getIndexOfSigner(argNonce, recoveredAddress);
         console.log("indexOfSigner = ", indexOfSigner);
@@ -178,9 +191,10 @@ contract MultiSigService {
         multiSigColl[argNonce].signers[indexOfSigner].hasSigned = true;
     }
 
+    //todo remove after testing
     function recover(bytes32 argHash, bytes memory argSig) public pure returns (address)
     {
-        return argHash.recover(argSig);
+        return argHash.toEthSignedMessageHash().recover(argSig);
     }
 
     //if enough signers, the contract executes the payment and credits the transaction to the owner of this multisig instance

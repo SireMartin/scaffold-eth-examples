@@ -199,6 +199,9 @@ export default function Service({contractName, ownerEvents, signaturesRequired, 
         <Button onClick={async ()=>{
           console.log("METHOD",setMethodName)
           console.log("rewardReceiver, rewardValue, qtySignatureRequired = ", rewardReceiver, rewardValue);
+          //clear signer for next multisig instance creation
+          setSignerToAdd(null)
+          setAddedSignerColl([]);
           const overrides = {};
           overrides.value = parseUnits("" + rewardValue, "wei");
           tx(
