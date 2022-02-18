@@ -9,6 +9,7 @@ import { useContractReader, useEventListener, useLocalStorage } from "../hooks";
 import { FACTORY_ADDRESS } from "@uniswap/sdk";
 import { _fetchData } from "ethers/lib/utils";
 import { useBalance } from "../hooks";
+import { useContractLoader, useContractExistsAtAddress } from "../hooks";
 
 const { Option } = Select;
 
@@ -27,6 +28,8 @@ export default function Service({contractName, ownerEvents, signaturesRequired, 
   const [currentBalance, setCurrentBalance] = useState();
   const [contractBalance, setContractBalance] = useState();
   const [calcHash, setCalcHash] = useState();
+  const [signerToAdd, setSignerToAdd] = useState();
+  const [addedSignerColl, setAddedSignerColl] = useState([]);
 
   const [rewardReceiver, setRewardReceiver] = useLocalStorage("rewardReceiver");
   const [challengeDescription, setChallengeDescription] = useLocalStorage("newChallengeDescription");
@@ -63,6 +66,12 @@ export default function Service({contractName, ownerEvents, signaturesRequired, 
     fetchNonce();
   }, [calcHash]);
 
+  const contractIsDeployed = useContractExistsAtAddress(userProvider, address);
+
+  if(!contractIsDeployed)
+  {
+    return <div>Loading...</div>
+  }
   return (
     <div style={{ margin: "auto", width: "40vw" }}>
       <div>
@@ -125,6 +134,29 @@ export default function Service({contractName, ownerEvents, signaturesRequired, 
         />
       </div>
 
+      <div style={{margin:8,padding:8}}>
+        <AddressInput
+          autoFocus
+          ensProvider={mainnetProvider}
+          placeholder="add signer"
+          value={signerToAdd}
+          onChange={setSignerToAdd}
+        />
+      </div>
+
+      <div style={{margin:8,padding:8}}>
+        <Button onClick={()=>{
+          var temp = addedSignerColl.push(signerToAdd);
+          setAddedSignerColl(temp);
+        }}>
+        Add Signer
+        </Button>
+      </div>
+
+      <div>
+        addedSignerColl = {addedSignerColl}
+      </div>
+      
       <div style={{ margin: 2 }}>
         <Input
           placeholder="reward value"
@@ -169,15 +201,8 @@ export default function Service({contractName, ownerEvents, signaturesRequired, 
           tx(
             writeContracts[contractName].addMultiSig(rewardReceiver, qtySignatureRequired, [rewardReceiver, "0x5FbDB2315678afecb367f032d93F642f64180aa3"], "maarten is the best", overrides)
           );
+          //this does not work for useEffect
           setCalcHash(hash);
-          /*let calldata = readContracts[contractName].interface.encodeFunctionData(methodName,[newOwner,newSignaturesRequired])
-          console.log("calldata",calldata)
-          setData(calldata)
-          setAmount("0")
-          setTo(readContracts[contractName].address)
-          setTimeout(()=>{
-            history.push('/create')
-          },777)*/
         }}>
         Create New MultiSig Instance
         </Button>

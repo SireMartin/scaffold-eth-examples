@@ -106,7 +106,7 @@ contract MultiSigService {
         {
             newMultiSig.signers.push(SignerInfo(argSigners[i], false));
             //register the nonce to the signer
-            signerInfoColl[argSigners[i]].push(NonceInfo(currentNonce, true));
+            addSignerToNonce(currentNonce, argSigners[i]);
         }
         //register the nonce to the creator of the multisig instance
         ownerInfoColl[msg.sender].ownedNonceColl.push(currentNonce);
@@ -134,7 +134,7 @@ contract MultiSigService {
         multiSigColl[argNonce].qtyReqSig = argQtyReqSig;
         
         //register the nonce to the signer
-        signerInfoColl[argAddr].push(NonceInfo(argNonce, true));
+        addSignerToNonce(argNonce, argAddr);
         
         //first check if the new signer can take the space of a previously removed signer
         for(uint i = 0; i < multiSigColl[argNonce].signers.length; ++i)
@@ -149,24 +149,16 @@ contract MultiSigService {
         multiSigColl[argNonce].signers.push(SignerInfo(argAddr, false));
     }
 
-    function removeSigner(uint argNonce, address argAddr, uint8 argQtyReqSig) public onlyOwner(argNonce)
+    function removeSigner(uint argNonce, address argSignerAddr, uint8 argQtyReqSig) public onlyOwner(argNonce)
     {
-        uint signerIndex = getIndexOfSigner(argNonce, argAddr);
+        uint signerIndex = getIndexOfSigner(argNonce, argSignerAddr);
         require(signerIndex != type(uint).max, "not able to remove unregistered signer");
         multiSigColl[argNonce].signers[signerIndex].addr = address(0);
         multiSigColl[argNonce].signers[signerIndex].hasSigned = false;
         multiSigColl[argNonce].qtyReqSig = argQtyReqSig;
 
-        bool nonceRemovedForSigner = false;
-        for(uint i; i < signerInfoColl[argAddr].length; ++i)
-        {
-            if(signerInfoColl[argAddr][i].nonce == argNonce)
-            {
-                signerInfoColl[argAddr][i].isValid = false;
-                nonceRemovedForSigner = true;
-            }    
-        }
-        require(nonceRemovedForSigner, "signer was removed from multisig instance, but unable to remove its nonce reference, probabely a bug in signer nonce ref");
+        //remove signer address to nonce mapping
+        removeSignerFromNonce(argNonce, argSignerAddr);
     }
 
     //check for this address to exist as a signer and if so add signature
@@ -208,5 +200,37 @@ contract MultiSigService {
     function getGetal() public pure returns (uint8)
     {
         return 8;
+    }
+
+    //TODO: make private
+    function addSignerToNonce(uint argNonce, address argSignerAddr) public
+    {
+        //first try to re-use an existing entity set to false
+        for(uint i = 0; i < signerInfoColl[argSignerAddr].length; ++i)
+        {
+            if(!signerInfoColl[argSignerAddr][i].isValid)
+            {
+                signerInfoColl[argSignerAddr][i].nonce = argNonce;
+                signerInfoColl[argSignerAddr][i].isValid = true;
+                return;
+            }
+        }
+        //if no entry could be re-used, make a new one
+        signerInfoColl[argSignerAddr].push(NonceInfo(argNonce, true));
+    }
+
+    //TODO: make private
+    function removeSignerFromNonce(uint argNonce, address argSignerAddr) public
+    {
+        bool nonceRemovedForSigner = false;
+        for(uint i; i < signerInfoColl[argSignerAddr].length; ++i)
+        {
+            if(signerInfoColl[argSignerAddr][i].nonce == argNonce)
+            {
+                signerInfoColl[argSignerAddr][i].isValid = false;
+                nonceRemovedForSigner = true;
+            }    
+        }
+        require(nonceRemovedForSigner, "signer was removed from multisig instance, but unable to remove its nonce reference, probabely a bug in signer nonce ref");
     }
 }
