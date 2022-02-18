@@ -146,15 +146,20 @@ export default function Service({contractName, ownerEvents, signaturesRequired, 
 
       <div style={{margin:8,padding:8}}>
         <Button onClick={()=>{
-          var temp = addedSignerColl.push(signerToAdd);
+          console.log("signersToAdd before = ", addedSignerColl);
+          var temp = addedSignerColl;
+          temp.push(signerToAdd);
+          console.log("temp = ", temp);
           setAddedSignerColl(temp);
+          console.log("signersToAdd after  = ", addedSignerColl);
+          setSignerToAdd(null)
         }}>
         Add Signer
         </Button>
       </div>
 
       <div>
-        addedSignerColl = {addedSignerColl}
+        addedSignerColl = {JSON.stringify(addedSignerColl)}
       </div>
       
       <div style={{ margin: 2 }}>
@@ -194,15 +199,11 @@ export default function Service({contractName, ownerEvents, signaturesRequired, 
         <Button onClick={async ()=>{
           console.log("METHOD",setMethodName)
           console.log("rewardReceiver, rewardValue, qtySignatureRequired = ", rewardReceiver, rewardValue);
-          var hash = await readContracts[contractName].calculateHash(1, rewardReceiver, rewardValue);
-          console.log("hash = ", hash);
           const overrides = {};
           overrides.value = parseUnits("" + rewardValue, "wei");
           tx(
-            writeContracts[contractName].addMultiSig(rewardReceiver, qtySignatureRequired, [rewardReceiver, "0x5FbDB2315678afecb367f032d93F642f64180aa3"], "maarten is the best", overrides)
+            writeContracts[contractName].addMultiSig(rewardReceiver, qtySignatureRequired, addedSignerColl, challengeDescription, overrides)
           );
-          //this does not work for useEffect
-          setCalcHash(hash);
         }}>
         Create New MultiSig Instance
         </Button>

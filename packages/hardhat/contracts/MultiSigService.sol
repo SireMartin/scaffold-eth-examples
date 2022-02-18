@@ -99,6 +99,8 @@ contract MultiSigService {
         newMultiSig.qtyReqSig = argQtyReqSig;
         newMultiSig.to = argTo;
         newMultiSig.amount = msg.value;
+        //we cannot calculate the has from client because of concurrency so the nonce (key of the multisig instance) is assigned here
+        //after the multisig instance is created, the signers can use the nonce in the frontend to calculate the hash there
         newMultiSig.hash = calculateHash(currentNonce, newMultiSig.to, newMultiSig.amount);
         newMultiSig.owner = msg.sender;
         newMultiSig.shortDescription = argDesc;
@@ -164,10 +166,21 @@ contract MultiSigService {
     //check for this address to exist as a signer and if so add signature
     function sign(uint argNonce, bytes memory argSig) public nonceExists(argNonce)
     {
-        require(msg.sender == multiSigColl[argNonce].hash.recover(argSig), "signer is not the sender of this message");
-        uint signerIndex = getIndexOfSigner(argNonce, msg.sender);
-        require(signerIndex != type(uint).max, "you are not registered as a signer for this multisig");
-        multiSigColl[argNonce].signers[signerIndex].hasSigned = true;
+        console.log("hash");
+        console.logBytes32(multiSigColl[argNonce].hash);
+        console.log("sig");
+        console.logBytes(argSig);
+        address recoveredAddress = multiSigColl[argNonce].hash.recover(argSig);
+        console.log("recoveredAddress = ", recoveredAddress);
+        uint indexOfSigner = getIndexOfSigner(argNonce, recoveredAddress);
+        console.log("indexOfSigner = ", indexOfSigner);
+        require(type(uint).max != indexOfSigner, "this is not a singers signature");
+        multiSigColl[argNonce].signers[indexOfSigner].hasSigned = true;
+    }
+
+    function recover(bytes32 argHash, bytes memory argSig) public pure returns (address)
+    {
+        return argHash.recover(argSig);
     }
 
     //if enough signers, the contract executes the payment and credits the transaction to the owner of this multisig instance
@@ -212,9 +225,11 @@ contract MultiSigService {
             {
                 signerInfoColl[argSignerAddr][i].nonce = argNonce;
                 signerInfoColl[argSignerAddr][i].isValid = true;
+                console.log("re-used existing spot");
                 return;
             }
         }
+        console.log("added new spot");
         //if no entry could be re-used, make a new one
         signerInfoColl[argSignerAddr].push(NonceInfo(argNonce, true));
     }
@@ -227,6 +242,7 @@ contract MultiSigService {
         {
             if(signerInfoColl[argSignerAddr][i].nonce == argNonce)
             {
+                console.log("removed signer");
                 signerInfoColl[argSignerAddr][i].isValid = false;
                 nonceRemovedForSigner = true;
             }    
