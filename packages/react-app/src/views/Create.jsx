@@ -13,7 +13,7 @@ import { useContractLoader, useContractExistsAtAddress } from "../hooks";
 
 const { Option } = Select;
 
-export default function Service({contractName, ownerEvents, signaturesRequired, address, nonce, userProvider, mainnetProvider, localProvider, yourLocalBalance, price, tx, readContracts, writeContracts, blockExplorer }) {
+export default function Create({contractName, ownerEvents, signaturesRequired, address, userProvider, mainnetProvider, localProvider, yourLocalBalance, price, tx, readContracts, writeContracts, blockExplorer }) {
 
   const history = useHistory();
 
@@ -39,7 +39,7 @@ export default function Service({contractName, ownerEvents, signaturesRequired, 
 
   //wordt uitgevoerd bij mounten en unmounten deze service component
   useEffect(() => {
-    async function fetchNonce(){
+    async function fetchData(){
       if(readContracts && readContracts[contractName]){
         var cn = await readContracts[contractName].currentNonce();
         console.log("current nonce = ", cn);
@@ -63,7 +63,7 @@ export default function Service({contractName, ownerEvents, signaturesRequired, 
         setContractBalance(e);
       }
     }
-    fetchNonce();
+    fetchData();
   }, [calcHash]);
 
   const contractIsDeployed = useContractExistsAtAddress(userProvider, address);

@@ -15,7 +15,7 @@ import { formatEther, parseEther } from "@ethersproject/units";
 import { Hints, ExampleUI, Subgraph } from "./views";
 import { useThemeSwitcher } from "react-css-theme-switcher";
 import { INFURA_ID, DAI_ADDRESS, DAI_ABI, NETWORK, NETWORKS } from "./constants";
-import { CreateTransaction, Transactions, Owners, FrontPage, Service } from "./views";
+import { Transactions, Sign, FrontPage, Create, Send } from "./views";
 
 /*
     Welcome to 🏗 scaffold-eth !
@@ -252,14 +252,14 @@ function App(props) {
           <Menu.Item key="/">
             <Link onClick={()=>{setRoute("/")}} to="/">MultiSig</Link>
           </Menu.Item>
-          <Menu.Item key="/service">
-            <Link onClick={()=>{setRoute("/service")}} to="/service">Service</Link>
-          </Menu.Item>
-          <Menu.Item key="/owners">
-            <Link onClick={()=>{setRoute("/owners")}} to="/owners">Owners</Link>
-          </Menu.Item>
           <Menu.Item key="/create">
             <Link onClick={()=>{setRoute("/create")}} to="/create">Create</Link>
+          </Menu.Item>
+          <Menu.Item key="/sign">
+            <Link onClick={()=>{setRoute("/sign")}} to="/sign">Sign</Link>
+          </Menu.Item>
+          <Menu.Item key="/send">
+            <Link onClick={()=>{setRoute("/send")}} to="/send">Send</Link>
           </Menu.Item>
           <Menu.Item key="/pool">
             <Link onClick={()=>{setRoute("/pool")}} to="/pool">Pool</Link>
@@ -301,8 +301,8 @@ function App(props) {
               blockExplorer={blockExplorer}
             />
             */ }
-            <Route exact path="/owners">
-            <Owners
+            <Route exact path="/sign">
+            <Sign
               contractName={contractName}
               address={address}
               userProvider={userProvider}
@@ -314,13 +314,12 @@ function App(props) {
               writeContracts={writeContracts}
               readContracts={readContracts}
               blockExplorer={blockExplorer}
-              nonce={nonce}
               ownerEvents={ownerEvents}
               signaturesRequired={signaturesRequired}
             />
           </Route>
-          <Route exact path="/service">
-            <Service
+          <Route exact path="/send">
+            <Send
               contractName={contractName}
               address={address}
               userProvider={userProvider}
@@ -332,14 +331,12 @@ function App(props) {
               writeContracts={writeContracts}
               readContracts={readContracts}
               blockExplorer={blockExplorer}
-              nonce={nonce}
               ownerEvents={ownerEvents}
               signaturesRequired={signaturesRequired}
             />
           </Route>
-          <Route path="/create">
-            <CreateTransaction
-              poolServerUrl={poolServerUrl}
+          <Route exact path="/create">
+            <Create
               contractName={contractName}
               address={address}
               userProvider={userProvider}
@@ -350,7 +347,9 @@ function App(props) {
               tx={tx}
               writeContracts={writeContracts}
               readContracts={readContracts}
-              setRoute={setRoute}
+              blockExplorer={blockExplorer}
+              ownerEvents={ownerEvents}
+              signaturesRequired={signaturesRequired}
             />
           </Route>
           <Route path="/pool">

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
-import { Select, Button, List, Divider, Input, Card, DatePicker, Slider, Switch, Progress, Spin, Tooltip } from "antd";
+import { Select, Button, List, Divider, Input, Card, DatePicker, Slider, Switch, Progress, Spin, Tooltip, Statistic } from "antd";
 import { CloseOutlined, SyncOutlined } from '@ant-design/icons';
 import { Address, AddressInput, Balance, Blockie } from "../components";
 import { parseEther, formatEther, parseUnits } from "@ethersproject/units";
@@ -10,7 +10,7 @@ import { useContractLoader, useContractExistsAtAddress } from "../hooks";
 
 const { Option } = Select;
 
-export default function Owners({contractName, ownerEvents, signaturesRequired, address, nonce, userProvider, mainnetProvider, localProvider, yourLocalBalance, price, tx, readContracts, writeContracts, blockExplorer }) {
+export default function Sign({contractName, ownerEvents, signaturesRequired, address, userProvider, mainnetProvider, localProvider, yourLocalBalance, price, tx, readContracts, writeContracts, blockExplorer }) {
 
   const history = useHistory();
 
@@ -18,11 +18,12 @@ export default function Owners({contractName, ownerEvents, signaturesRequired, a
   const [noncesToSign, setNoncesToSign] = useState([]);
   const [signedMultiSigInstances, setSignedMultiSigInstances] = useState([]);
   const [unsignedMultiSigInstances, setUnsignedMultiSigInstances] = useState([]);
-
+  const [generatedSignature, setGeneratedSignature] = useState();
+  const [calculatedHash, setCalculatedHash] = useState();
 
   //wordt uitgevoerd bij mounten en unmounten deze service component
   useEffect(() => {
-    async function fetchNonce(){
+    async function fetchData(){
       if(readContracts && readContracts[contractName]){
         //get the nonces the current addres is signer of (this contains a boolean if still an active signer for nonce (signer could be removed))
         var _noncesToSign = await readContracts[contractName].getNoncesToSign(address);
@@ -79,7 +80,7 @@ export default function Owners({contractName, ownerEvents, signaturesRequired, a
 
       }
     }
-    fetchNonce();
+    fetchData();
   }, [triggerRendering]);
 
   const contractIsDeployed = useContractExistsAtAddress(userProvider, address);
@@ -103,16 +104,33 @@ export default function Owners({contractName, ownerEvents, signaturesRequired, a
               <div>{item.multisig[6]} </div>
               <Button onClick={async () =>{
                 var hash = await readContracts[contractName].calculateHash(item.nonce ,item.multisig[2], item.multisig[4]);
+                setCalculatedHash(hash);
                 console.log("nonce = ", item.nonce);
                 console.log("hash = ", hash);
                 console.log("address = ", address);
                 const signature = await userProvider.send("personal_sign", [hash, address]);
                 console.log("signature = ", signature);
-                const recover = await readContracts[contractName].recover(hash, signature);
-                console.log("recover = ", recover);
-                tx(writeContracts[contractName].sign(item.nonce, signature));
+                setGeneratedSignature(signature);
                 setTriggerRendering(triggerRendering + 1);
               }}>Sign</Button>
+
+              {generatedSignature.length > 0 &&
+                <div>
+                  <div>
+                    <Statistic title="nonce" value={item.nonce} />
+                    <Statistic title="Hash" value={generatedSignature} />
+                  </div>
+                  <Button onClick={async () =>{
+                    console.log("signature = ", generatedSignature);
+                    const recover = await readContracts[contractName].recover(calculatedHash, generatedSignature);
+                    console.log("recover = ", recover);
+                    tx(writeContracts[contractName].sign(item.nonce, generatedSignature));
+                    setGeneratedSignature("");
+                    setCalculatedHash("");
+                    setTriggerRendering(triggerRendering + 1);
+                  }}>Send Signature</Button>
+                </div>
+              }
             </div>
           );
         }}
