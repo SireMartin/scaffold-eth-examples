@@ -18,7 +18,8 @@ export default function Sign({contractName, ownerEvents, signaturesRequired, add
   const [noncesToSign, setNoncesToSign] = useState([]);
   const [signedMultiSigInstances, setSignedMultiSigInstances] = useState([]);
   const [unsignedMultiSigInstances, setUnsignedMultiSigInstances] = useState([]);
-  const [generatedSignature, setGeneratedSignature] = useState();
+  const [generatedSignature, setGeneratedSignature] = useState("");
+  const [nonceForGeneratedSignature, setNonceForGeneratedSignature] = useState(0)
   const [calculatedHash, setCalculatedHash] = useState();
 
   //wordt uitgevoerd bij mounten en unmounten deze service component
@@ -111,10 +112,11 @@ export default function Sign({contractName, ownerEvents, signaturesRequired, add
                 const signature = await userProvider.send("personal_sign", [hash, address]);
                 console.log("signature = ", signature);
                 setGeneratedSignature(signature);
+                setNonceForGeneratedSignature(item.nonce)
                 setTriggerRendering(triggerRendering + 1);
               }}>Sign</Button>
 
-              {generatedSignature.length > 0 &&
+              {generatedSignature.length > 0 && nonceForGeneratedSignature == item.nonce &&
                 <div>
                   <div>
                     <Statistic title="nonce" value={item.nonce} />
@@ -127,6 +129,7 @@ export default function Sign({contractName, ownerEvents, signaturesRequired, add
                     tx(writeContracts[contractName].sign(item.nonce, generatedSignature));
                     setGeneratedSignature("");
                     setCalculatedHash("");
+                    setNonceForGeneratedSignature(0)
                     setTriggerRendering(triggerRendering + 1);
                   }}>Send Signature</Button>
                 </div>

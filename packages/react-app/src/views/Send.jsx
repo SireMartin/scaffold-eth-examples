@@ -7,8 +7,8 @@ const { Option } = Select;
 export default function Send({contractName, ownerEvents, signaturesRequired, address, userProvider, mainnetProvider, localProvider, yourLocalBalance, price, tx, readContracts, writeContracts, blockExplorer }) {
 
   const [triggerRendering, setTriggerRendering] = useState();
-  const [nonce, setNonce] = useState();
-  const [signature, setSignature] = useState();
+  const [nonce, setNonce] = useState("");
+  const [signature, setSignature] = useState("");
 
   //wordt uitgevoerd bij mounten en unmounten deze service component
   useEffect(() => {

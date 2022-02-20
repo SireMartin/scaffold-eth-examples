@@ -15,7 +15,7 @@ import { formatEther, parseEther } from "@ethersproject/units";
 import { Hints, ExampleUI, Subgraph } from "./views";
 import { useThemeSwitcher } from "react-css-theme-switcher";
 import { INFURA_ID, DAI_ADDRESS, DAI_ABI, NETWORK, NETWORKS } from "./constants";
-import { Transactions, Sign, FrontPage, Create, Send } from "./views";
+import { Execute, Sign, FrontPage, Create, Send, Manage } from "./views";
 
 /*
     Welcome to 🏗 scaffold-eth !
@@ -39,9 +39,6 @@ import { Transactions, Sign, FrontPage, Create, Send } from "./views";
 
 /// 📡 What chain are your contracts deployed to?
 const targetNetwork = NETWORKS['localhost']; // <------- select your target frontend network (localhost, rinkeby, xdai, mainnet)
-
-// const poolServerUrl = "https://backend.multisig.holdings:49832/"
-const poolServerUrl = "http://172.18.107.85:49832/"
 
 // 😬 Sorry for all the console logging
 const DEBUG = true
@@ -255,14 +252,17 @@ function App(props) {
           <Menu.Item key="/create">
             <Link onClick={()=>{setRoute("/create")}} to="/create">Create</Link>
           </Menu.Item>
+          <Menu.Item key="/manage">
+            <Link onClick={()=>{setRoute("/manage")}} to="/manage">Manage</Link>
+          </Menu.Item>
           <Menu.Item key="/sign">
             <Link onClick={()=>{setRoute("/sign")}} to="/sign">Sign</Link>
           </Menu.Item>
           <Menu.Item key="/send">
             <Link onClick={()=>{setRoute("/send")}} to="/send">Send</Link>
           </Menu.Item>
-          <Menu.Item key="/pool">
-            <Link onClick={()=>{setRoute("/pool")}} to="/pool">Pool</Link>
+          <Menu.Item key="/execute">
+            <Link onClick={()=>{setRoute("/execute")}} to="/execute">Execute</Link>
           </Menu.Item>
           <Menu.Item key="/debug">
             <Link onClick={()=>{setRoute("/debug")}} to="/debug">Debug</Link>
@@ -335,6 +335,23 @@ function App(props) {
               signaturesRequired={signaturesRequired}
             />
           </Route>
+          <Route exact path="/manage">
+            <Manage
+              contractName={contractName}
+              address={address}
+              userProvider={userProvider}
+              mainnetProvider={mainnetProvider}
+              localProvider={localProvider}
+              yourLocalBalance={yourLocalBalance}
+              price={price}
+              tx={tx}
+              writeContracts={writeContracts}
+              readContracts={readContracts}
+              blockExplorer={blockExplorer}
+              ownerEvents={ownerEvents}
+              signaturesRequired={signaturesRequired}
+            />
+          </Route>
           <Route exact path="/create">
             <Create
               contractName={contractName}
@@ -352,9 +369,8 @@ function App(props) {
               signaturesRequired={signaturesRequired}
             />
           </Route>
-          <Route path="/pool">
-            <Transactions
-              poolServerUrl={poolServerUrl}
+          <Route exact path="/execute">
+            <Execute
               contractName={contractName}
               address={address}
               userProvider={userProvider}
@@ -366,9 +382,9 @@ function App(props) {
               writeContracts={writeContracts}
               readContracts={readContracts}
               blockExplorer={blockExplorer}
-              nonce={nonce}
+              ownerEvents={ownerEvents}
               signaturesRequired={signaturesRequired}
-            /> 
+            />
           </Route>
           <Route path="/debug">
             <Contract
@@ -389,14 +405,6 @@ function App(props) {
               provider={mainnetProvider}
               address={address}
               blockExplorer={"https://etherscan.io/"}
-            />
-          </Route>
-          <Route path="/subgraph">
-            <Subgraph
-            subgraphUri={props.subgraphUri}
-            tx={tx}
-            writeContracts={writeContracts}
-            mainnetProvider={mainnetProvider}
             />
           </Route>
         </Switch>

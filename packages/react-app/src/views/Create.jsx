@@ -159,6 +159,17 @@ export default function Create({contractName, ownerEvents, signaturesRequired, a
       </div>
 
       <div>
+        <List
+          dataSource={addedSignerColl}
+          renderItem={item => (
+            <List.Item>
+              <Address address={item} ensProvider={mainnetProvider} />
+            </List.Item>
+          )}
+        />
+      </div>
+
+      <div>
         addedSignerColl = {JSON.stringify(addedSignerColl)}
       </div>
       

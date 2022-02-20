@@ -82,6 +82,7 @@ contract MultiSigService {
 
     function addMultiSig(address payable argTo, uint8 argQtyReqSig, address[] memory argSigners, string memory argDesc) public payable returns (uint) 
     {
+        console.log("current nonce = ", currentNonce);
         console.log("entering addMultiSig()");
         console.log("param argTo = ", argTo);
         console.log("param argQtyReqSig = ", argQtyReqSig);
@@ -202,8 +203,8 @@ contract MultiSigService {
     {
         //the value has to be transferred prior to accounting the owners credits for the transaction, because we don't know the cost upfront 
         require(msg.sender.code.length == 0, "not allowed for a contract to call execute because of re-entrancy");
-        //start by one because the owner of the multisig is also a signer
-        uint8 qtyValidSig = 1;
+        //start on 0 : the owner of the multisig does not count as a signer
+        uint8 qtyValidSig = 0;
         for(uint i = 0; i < multiSigColl[argNonce].signers.length; ++i)
         {
             if(multiSigColl[argNonce].signers[i].hasSigned)
@@ -211,11 +212,15 @@ contract MultiSigService {
                 ++qtyValidSig;
             }
         }
+        console.log("qtyValidSig = ", qtyValidSig);
         require(qtyValidSig >= multiSigColl[argNonce].qtyReqSig, "not enough signatures to execute multisig");
         uint contractValueBefore = address(this).balance;
+        console.log("contract value before = ", contractValueBefore);
         (bool success, bytes memory result) = multiSigColl[argNonce].to.call{value: multiSigColl[argNonce].amount}("");
         require(success, "executeTransaction: failed to transfer value for this multisig");
         ownerInfoColl[msg.sender].balance -= contractValueBefore - address(this).balance - multiSigColl[argNonce].amount;
+        console.log("contract balance after = ", address(this).balance);
+        multiSigColl[argNonce].isCompleted = true;
     }
 
     //multisig instance creator adds credits to the contract for execution of its transfers
