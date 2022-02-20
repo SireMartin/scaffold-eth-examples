@@ -17,17 +17,7 @@ export default function Create({contractName, ownerEvents, signaturesRequired, a
 
   const history = useHistory();
 
-  const [to, setTo] = useLocalStorage("to");
-  const [amount, setAmount] = useLocalStorage("amount","0");
-  const [methodName, setMethodName] = useLocalStorage("addSigner");
-  const [data, setData] = useLocalStorage("data","0x");
-  const [currentNonce, setCurrentNonce] = useState(2); //state waarden binnen deze component
-
-  const [currentMultiSig, setCurrentMultiSig] = useState();
-  const [currentSigners, setCurrentSigners] = useState();
-  const [currentBalance, setCurrentBalance] = useState();
-  const [contractBalance, setContractBalance] = useState();
-  const [calcHash, setCalcHash] = useState();
+  const [triggerRendering, setTriggerRendering] = useState();
   const [signerToAdd, setSignerToAdd] = useState();
   const [addedSignerColl, setAddedSignerColl] = useState([]);
 
@@ -40,31 +30,12 @@ export default function Create({contractName, ownerEvents, signaturesRequired, a
   //wordt uitgevoerd bij mounten en unmounten deze service component
   useEffect(() => {
     async function fetchData(){
-      if(readContracts && readContracts[contractName]){
-        var cn = await readContracts[contractName].currentNonce();
-        console.log("current nonce = ", cn);
-        setCurrentNonce(cn.toNumber());
+      if(readContracts && readContracts[contractName]){        
         
-        var ms = await readContracts[contractName].multiSigColl(1);
-        console.log("current multisig = ", ms);
-        setCurrentMultiSig(ms);
-
-        var k = await readContracts[contractName].getSigners(1);
-        console.log("current signers = ", k);
-        setCurrentSigners(k);
-
-        var p = await readContracts[contractName].ownerInfoColl(address);
-        console.log("p = ", p);
-        setCurrentBalance(formatEther(p));
-
-        var ad = await readContracts[contractName].address;
-        var z = await userProvider.getBalance(ad);
-        var e = formatEther(z);
-        setContractBalance(e);
       }
     }
     fetchData();
-  }, [calcHash]);
+  }, [triggerRendering]);
 
   const contractIsDeployed = useContractExistsAtAddress(userProvider, address);
 
@@ -74,46 +45,6 @@ export default function Create({contractName, ownerEvents, signaturesRequired, a
   }
   return (
     <div style={{ margin: "auto", width: "40vw" }}>
-      <div>
-        your credits : {currentBalance}
-      </div>
-
-      <div>
-        upload credits:
-      </div>
-
-      <div style={{ margin: 2 }}>
-        <Input
-          placeholder="transaction credit upload value"
-          onChange={e => setUploadCreditValue(e.target.value)}
-          value={uploadCreditValue}
-          addonAfter={
-            <div>
-              <Tooltip placement="right" title={" * 10^18 "}>
-                <div
-                  type="dashed"
-                  style={{ cursor: "pointer" }}
-                  onClick={async () => {
-                    let floatValue = parseFloat(uploadCreditValue)
-                    if(floatValue) setUploadCreditValue("" + floatValue * 10 ** 18);
-                  }}
-                >
-                  ✳️
-                </div>
-              </Tooltip>
-            </div>
-          }
-        />
-      </div>
-
-      <div style={{margin:8,padding:8}}>
-        <Button onClick={async ()=>{
-          console.log("uploadCreditValue = ", uploadCreditValue);
-          tx({to: writeContracts[contractName].address, value: parseUnits("" + uploadCreditValue, "wei")});
-        }}>
-        Upload Credits
-        </Button>
-      </div>  
 
       <div style={{margin:8,padding:8}}>
         <Input
@@ -208,7 +139,6 @@ export default function Create({contractName, ownerEvents, signaturesRequired, a
 
       <div style={{margin:8,padding:8}}>
         <Button onClick={async ()=>{
-          console.log("METHOD",setMethodName)
           console.log("rewardReceiver, rewardValue, qtySignatureRequired = ", rewardReceiver, rewardValue);
           //clear signer for next multisig instance creation
           setSignerToAdd(null)

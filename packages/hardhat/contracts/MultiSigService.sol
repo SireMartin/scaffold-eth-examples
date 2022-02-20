@@ -36,8 +36,8 @@ contract MultiSigService {
     }
 
     mapping(uint => MultiSig) public multiSigColl;          //nonce to multisig contract
-    mapping(address => OwnerInfo) public ownerInfoColl;  //balance to perform multisig execution on behalf of the owner + references to it's nonces (multisig instances created by the owner)
-    mapping(address => NonceInfo[]) public signerInfoColl;   //associates signers to nonces, which are keys to multisig instances
+    mapping(address => uint[]) public ownerInfoColl;        //references to it's nonces (multisig instances created by the owner)
+    mapping(address => NonceInfo[]) public signerInfoColl;  //associates signers to nonces, which are keys to multisig instances
 
     uint public currentNonce;
     uint public chainId;
@@ -67,7 +67,7 @@ contract MultiSigService {
 
     function getOwnedNonces(address argAddress) public view returns (uint[] memory)
     {
-        return ownerInfoColl[argAddress].ownedNonceColl;
+        return ownerInfoColl[argAddress];
     }
 
     function getNoncesToSign(address argAddress) public view returns (NonceInfo[] memory)
@@ -124,7 +124,7 @@ contract MultiSigService {
             addSignerToNonce(currentNonce, argSigners[i]);
         }
         //register the nonce to the creator of the multisig instance
-        ownerInfoColl[msg.sender].ownedNonceColl.push(currentNonce);
+        ownerInfoColl[msg.sender].push(currentNonce);
         return currentNonce++;
     }
 
@@ -214,19 +214,14 @@ contract MultiSigService {
         }
         console.log("qtyValidSig = ", qtyValidSig);
         require(qtyValidSig >= multiSigColl[argNonce].qtyReqSig, "not enough signatures to execute multisig");
-        uint contractValueBefore = address(this).balance;
-        console.log("contract value before = ", contractValueBefore);
         (bool success, bytes memory result) = multiSigColl[argNonce].to.call{value: multiSigColl[argNonce].amount}("");
         require(success, "executeTransaction: failed to transfer value for this multisig");
-        ownerInfoColl[msg.sender].balance -= contractValueBefore - address(this).balance - multiSigColl[argNonce].amount;
-        console.log("contract balance after = ", address(this).balance);
         multiSigColl[argNonce].isCompleted = true;
     }
 
-    //multisig instance creator adds credits to the contract for execution of its transfers
     receive() external payable 
     {
-        ownerInfoColl[msg.sender].balance += msg.value;
+        revert("You cannot pay directly to this contract");
     }
 
     function getGetal() public pure returns (uint8)
