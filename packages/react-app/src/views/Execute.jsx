@@ -20,36 +20,36 @@ export default function Execute({contractName, ownerEvents, signaturesRequired, 
         var _completedMultiSigColl = [];
         var _actualMultiSigColl = [];
 
-        for(var i = 0; i < ownedNonces.length; ++i)
+        ownedNonces.forEach(async iterNonce =>
         {
-          var iterMultiSig = await readContracts[contractName].multiSigColl(ownedNonces[i]);
-          var iterMultiSigSigners = await readContracts[contractName].getSigners(ownedNonces[i]);
+          var iterMultiSig = await readContracts[contractName].multiSigColl(iterNonce);
+          var iterMultiSigSigners = await readContracts[contractName].getSigners(iterNonce);
           console.log("iterMultiSig = ", iterMultiSig);
           console.log("iterMultiSigSigners = ", iterMultiSigSigners);
 
           var qtySign = 0;
           var activeSigners = [];
-          for(var j = 0; j < iterMultiSigSigners.length; ++j)
+          iterMultiSigSigners.forEach(iterSigner =>
           {
-            if(iterMultiSigSigners[j][0] != 0) //address
+            if(iterSigner.address != 0)
             {
-              activeSigners.push(iterMultiSigSigners[j])
+              activeSigners.push(iterSigner)
 
-              if(iterMultiSigSigners[j][1]) //hasSigned bool
+              if(iterSigner.hasSigned)
               {
                 ++qtySign;
               }
             }
-          }
+          });
           if(iterMultiSig.isCompleted)
           {
-            _completedMultiSigColl.push({multisig: iterMultiSig, signers: activeSigners, qtySigned: qtySign, nonce: ownedNonces[i]});
+            _completedMultiSigColl.push({multisig: iterMultiSig, signers: activeSigners, qtySigned: qtySign, nonce: iterNonce});
           }
           else
           {
-            _actualMultiSigColl.push({multisig: iterMultiSig, signers: activeSigners, qtySigned: qtySign, nonce: ownedNonces[i]});
+            _actualMultiSigColl.push({multisig: iterMultiSig, signers: activeSigners, qtySigned: qtySign, nonce: iterNonce});
           }
-        }
+        });
 
         setCompletedMultiSigColl(_completedMultiSigColl);
         setActualMultiSigColl(_actualMultiSigColl);
@@ -71,8 +71,8 @@ export default function Execute({contractName, ownerEvents, signaturesRequired, 
         dataSource={actualMultiSigColl}
         renderItem={item => (
           <List.Item>
-            {item.multisig[6]} ({item.qtySigned} / {item.multisig[1]})
-            { item.qtySigned >= item.multisig[1] &&
+            {item.multisig.shortDescription} ({item.qtySigned} / {item.multisig.qtyReqSig})
+            { item.qtySigned >= item.multisig.qtyReqSig &&
               <Button onClick={ () => {
                 console.log("Calling execute for nonce ", item.nonce);
                 tx(writeContracts[contractName].execute(item.nonce));
@@ -84,11 +84,11 @@ export default function Execute({contractName, ownerEvents, signaturesRequired, 
               dataSource={item.signers}
               renderItem={signer => (
                 <List.Item>
-                    <Address address={signer[0]} ensProvider={mainnetProvider} />
-                    { signer[1] && 
+                    <Address address={signer.addr} ensProvider={mainnetProvider} />
+                    { signer.hasSigned && 
                       <CheckCircleTwoTone twoToneColor="#52c41a" width="3em" height="3em" />
                     }
-                    { !signer[1] &&
+                    { !signer.hasSigned &&
                       <CloseCircleTwoTone twoToneColor="red" width="3em" height="3em" />
                     }
                 </List.Item>
@@ -103,16 +103,16 @@ export default function Execute({contractName, ownerEvents, signaturesRequired, 
         dataSource={completedMultiSigColl}
         renderItem={item => (
           <List.Item>
-            {item.multisig[6]} ({item.qtySigned} / {item.multisig[1]})
+            {item.multisig.shortDescription} ({item.qtySigned} / {item.multisig.qtyReqSig})
             <List
               dataSource={item.signers}
               renderItem={signer => (
                 <List.Item>
-                    <Address address={signer[0]} ensProvider={mainnetProvider} />
-                    { signer[1] && 
+                    <Address address={signer.addr} ensProvider={mainnetProvider} />
+                    { signer.hasSigned && 
                       <CheckCircleTwoTone twoToneColor="#52c41a" width="3em" height="3em" />
                     }
-                    { !signer[1] &&
+                    { !signer.hasSigned &&
                       <CloseCircleTwoTone twoToneColor="red" width="3em" height="3em" />
                     }
                 </List.Item>

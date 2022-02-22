@@ -25,24 +25,7 @@ export default function Create({contractName, ownerEvents, signaturesRequired, a
   const [challengeDescription, setChallengeDescription] = useLocalStorage("newChallengeDescription");
   const [rewardValue, setRewardValue] = useLocalStorage("rewardValue");
   const [qtySignatureRequired, setQtySignatureRequired] = useLocalStorage("qtySignatureRequired");
-  const [uploadCreditValue, setUploadCreditValue] = useLocalStorage("uploadCreditValue");
 
-  //wordt uitgevoerd bij mounten en unmounten deze service component
-  useEffect(() => {
-    async function fetchData(){
-      if(readContracts && readContracts[contractName]){        
-        
-      }
-    }
-    fetchData();
-  }, [triggerRendering]);
-
-  const contractIsDeployed = useContractExistsAtAddress(userProvider, address);
-
-  if(!contractIsDeployed)
-  {
-    return <div>Loading...</div>
-  }
   return (
     <div style={{ margin: "auto", width: "40vw" }}>
 

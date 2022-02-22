@@ -29,12 +29,6 @@ contract MultiSigService {
         bool isValid;   //true if owner or valid signer, false if signer has been removed (entries in NonceInfo will not be deleted when signer is removed, but markd as invalid)
     }
 
-    struct OwnerInfo
-    {
-        uint balance;           //owners balance for the contract to perform transactions with
-        uint[] ownedNonceColl;  //the owners nonces (= instances of a multisig)
-    }
-
     mapping(uint => MultiSig) public multiSigColl;          //nonce to multisig contract
     mapping(address => uint[]) public ownerInfoColl;        //references to it's nonces (multisig instances created by the owner)
     mapping(address => NonceInfo[]) public signerInfoColl;  //associates signers to nonces, which are keys to multisig instances
@@ -222,11 +216,6 @@ contract MultiSigService {
     receive() external payable 
     {
         revert("You cannot pay directly to this contract");
-    }
-
-    function getGetal() public pure returns (uint8)
-    {
-        return 8;
     }
 
     //TODO: make private

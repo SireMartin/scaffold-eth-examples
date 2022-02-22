@@ -34,51 +34,42 @@ export default function Sign({contractName, ownerEvents, signaturesRequired, add
         var unsignedInstanceColl = [];
         var signedInstanceColl = [];
         //iterate all nonces (= multisig instance keys) the user is signer of
-        for(var i = 0; i < _noncesToSign.length; ++i)
+        _noncesToSign.forEach(async iterNonce =>
         {
-          console.log("iter current nonce = ", _noncesToSign[i]);
+          console.log("iter current nonce = ", iterNonce);
           //we iterate the signerhas the signer has not been removed from the multisig instance
-          if(_noncesToSign[i][1])
+          if(iterNonce.isValid)
           {
             //for each nonce, get the multisig instance
-            var instance = await readContracts[contractName].multiSigColl(_noncesToSign[i][0]); //solidity NonceInfo.nonce
+            var instance = await readContracts[contractName].multiSigColl(iterNonce.nonce);
             console.log("multisig instance = ", instance);
 
             //get the signers for the multisig instance and their signing status
-            var instanceSigningInfo = await readContracts[contractName].getSigners(_noncesToSign[i][0]);
+            var instanceSigningInfo = await readContracts[contractName].getSigners(iterNonce.nonce);
             var userHasSigned = false;
             //iterate the signers of the multisig instance, they have a boolean about the signing status
-            for(var x = 0; x < instanceSigningInfo.length; ++x)
+            instanceSigningInfo.forEach(iterSigningInfo =>
             {
               //if the client address, add to structures for use in view (if the address is 0, the signer has been removed from the multisig instance)
-              if(instanceSigningInfo[x][0] == address)
+              if(iterSigningInfo.addr == address)
               {
                 console.log("address found");
-                if(instanceSigningInfo[x][1])
+                if(iterSigningInfo.hasSigned)
                 { //for overview
-                  signedInstanceColl.push({multisig: instance, nonce: _noncesToSign[i][0]});
+                  signedInstanceColl.push({multisig: instance, nonce: iterNonce.nonce});
                 }
                 else
                 { //for signing
-                  unsignedInstanceColl.push({multisig: instance, nonce: _noncesToSign[i][0]});
+                  unsignedInstanceColl.push({multisig: instance, nonce: iterNonce.nonce});
                 }
               }
-            }
+            });
           }
-        }
-        /*_noncesToSign.foreach(async element =>
-        {
-          console.log("nince = ", element);
-          if(element[1])
-          {
-            var instance = await readContracts[contractName].multiSigColl(element[0]);
-            console.log("instance = ", instance);
-            instanceColl.push(instance);
-          }
-        });*/
+        });
+        console.log("signed =   ", signedInstanceColl);
+        console.log("unsigned = ", unsignedInstanceColl);
         setSignedMultiSigInstances(signedInstanceColl);
         setUnsignedMultiSigInstances(unsignedInstanceColl);
-
       }
     }
     fetchData();
@@ -113,7 +104,6 @@ export default function Sign({contractName, ownerEvents, signaturesRequired, add
                 console.log("signature = ", signature);
                 setGeneratedSignature(signature);
                 setNonceForGeneratedSignature(item.nonce)
-                setTriggerRendering(triggerRendering + 1);
               }}>Sign</Button>
 
               {generatedSignature.length > 0 && nonceForGeneratedSignature == item.nonce &&
@@ -130,7 +120,6 @@ export default function Sign({contractName, ownerEvents, signaturesRequired, add
                     setGeneratedSignature("");
                     setCalculatedHash("");
                     setNonceForGeneratedSignature(0)
-                    setTriggerRendering(triggerRendering + 1);
                   }}>Send Signature</Button>
                 </div>
               }
@@ -144,10 +133,8 @@ export default function Sign({contractName, ownerEvents, signaturesRequired, add
         bordered
         dataSource={signedMultiSigInstances}
         renderItem={item => {
-          console.log("ITE88888M", item);
-
           return (
-            <div>{item.multisig[6]} </div>
+            <div>{item.multisig.shortDescription} </div>
           );
         }}
       />

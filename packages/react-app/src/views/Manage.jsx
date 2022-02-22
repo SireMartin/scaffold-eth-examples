@@ -8,7 +8,7 @@ const { Option } = Select;
 
 export default function Manage({contractName, ownerEvents, signaturesRequired, address, userProvider, mainnetProvider, localProvider, yourLocalBalance, price, tx, readContracts, writeContracts, blockExplorer }) {
 
-  const [triggerRendering, setTriggerRendering] = useState();
+  const [triggerRendering, setTriggerRendering] = useState("");
   const [activeMultiSigColl, setActiveMultiSigColl] = useState([]);
   const [selectedNonce, setSelectedNonce] = useState(0);
   const [selectedSigner, setSelectedSigner] = useState("");
@@ -19,28 +19,31 @@ export default function Manage({contractName, ownerEvents, signaturesRequired, a
   //wordt uitgevoerd bij mounten en unmounten deze service component
   useEffect(() => {
     async function fetchData(){
-      var _activeMultiSigColl = [];
       if(readContracts && readContracts[contractName]){
+        var _activeMultiSigColl = [];
+        console.log("address = ", address);
         var ownedNonces = await readContracts[contractName].getOwnedNonces(address);
-        for(var i = 0; i < ownedNonces.length; ++i)
+        console.log("ownedNonces = ", ownedNonces);
+        ownedNonces.forEach(async iterNonce => 
         {
-          var iterMultiSig = await readContracts[contractName].multiSigColl(ownedNonces[i]);
-          if(!iterMultiSig[0]) //isCompleted
+          var iterMultiSig = await readContracts[contractName].multiSigColl(iterNonce);
+          console.log("iterMultiSig = ", iterMultiSig);
+          if(!iterMultiSig.isCompleted) //isCompleted
           {
-            var iterMultiSigSigners = await readContracts[contractName].getSigners(ownedNonces[i]);
+            var iterMultiSigSigners = await readContracts[contractName].getSigners(iterNonce);
             console.log("iterMultiSigSigners =", iterMultiSigSigners);
             var activeSigners = [];
-            for(var j = 0; j < iterMultiSigSigners.length; ++j)
+            iterMultiSigSigners.forEach(iterSigner =>
             {
-              if(iterMultiSigSigners[j][0] != 0)
+              if(iterSigner.addr != 0)
               {
-                activeSigners.push(iterMultiSigSigners[j][0]);
+                activeSigners.push(iterSigner.addr);
               }
-            }
+            });
             console.log("activeSigners = ", activeSigners);
-            _activeMultiSigColl.push({multisig: iterMultiSig, signers: activeSigners, nonce: ownedNonces[i]});
+            _activeMultiSigColl.push({multisig: iterMultiSig, signers: activeSigners, nonce: iterNonce});
           }
-        }
+        });
         setActiveMultiSigColl(_activeMultiSigColl);
       }
     }
