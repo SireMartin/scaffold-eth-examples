@@ -83,16 +83,16 @@ function App(props) {
   const address = useUserAddress(userProvider);
 
   // You can warn the user if you would like them to be on a specific network
-  let localChainId = localProvider && localProvider._network && localProvider._network.chainId
-  let selectedChainId = userProvider && userProvider._network && userProvider._network.chainId
+  let localChainId = localProvider && localProvider._network && localProvider._network.chainId;
+  let selectedChainId = userProvider && userProvider._network && userProvider._network.chainId;
 
   // For more hooks, check out 🔗eth-hooks at: https://www.npmjs.com/package/eth-hooks
 
   // The transactor wraps transactions and provides notificiations
-  const tx = Transactor(userProvider, gasPrice)
+  const tx = Transactor(userProvider, gasPrice);
 
   // Faucet Tx can be used to send funds from the faucet
-  const faucetTx = Transactor(localProvider, gasPrice)
+  const faucetTx = Transactor(localProvider, gasPrice);
 
   // 🏗 scaffold-eth is full of handy hooks like this one to get your balance:
   const yourLocalBalance = useBalance(localProvider, address);
@@ -101,31 +101,34 @@ function App(props) {
   const yourMainnetBalance = useBalance(mainnetProvider, address);
 
   // Load in your local 📝 contract and read a value from it:
-  const readContracts = useContractLoader(localProvider)
+  const readContracts = useContractLoader(localProvider);
 
   // If you want to make 🔐 write transactions to your contracts, use the userProvider:
-  const writeContracts = useContractLoader(userProvider)
+  const writeContracts = useContractLoader(userProvider);
 
-  const contractName = "MultiSigService"
+  const contractName = "MultiSigService";
 
   //📟 Listen for broadcast events
   const executeTransactionEvents = useEventListener(readContracts, contractName, "ExecuteTransaction", localProvider, 1);
   if(DEBUG) console.log("📟 executeTransactionEvents:",executeTransactionEvents)
 
-  // keep track of a variable from the contract in the local React state:
-  const isOwner = useContractReader(readContracts, contractName, "isOwner", [address])
-  if(DEBUG) console.log("🤗 isOwner ("+address+"):",isOwner)
+  const updateFrontendEvents = useEventListener(readContracts, contractName, "UpdateFrontend", localProvider, 1);
+  if(DEBUG) console.log("📟 updateFrontendEvents:",updateFrontendEvents);
 
   // keep track of a variable from the contract in the local React state:
-  const nonce = useContractReader(readContracts, contractName, "nonce")
-  if(DEBUG) console.log("# nonce:",nonce)
+  const isOwner = useContractReader(readContracts, contractName, "isOwner", [address])
+  if(DEBUG) console.log("🤗 isOwner ("+address+"):",isOwner);
+
+  // keep track of a variable from the contract in the local React state:
+  const nonce = useContractReader(readContracts, contractName, "nonce");
+  if(DEBUG) console.log("# nonce:",nonce);
 
   //📟 Listen for broadcast events
   const ownerEvents = useEventListener(readContracts, contractName, "Owner", localProvider, 1);
-  if(DEBUG) console.log("📟 ownerEvents:",ownerEvents)
+  if(DEBUG) console.log("📟 ownerEvents:",ownerEvents);
 
   // If you want to bring in the mainnet DAI contract it would look like:
-  const mainnetDAIContract = useExternalContractLoader(mainnetProvider, DAI_ADDRESS, DAI_ABI)
+  const mainnetDAIContract = useExternalContractLoader(mainnetProvider, DAI_ADDRESS, DAI_ABI);
 
   // If you want to call a function on a new block
   useOnBlock(mainnetProvider, () => {
@@ -314,7 +317,7 @@ function App(props) {
               writeContracts={writeContracts}
               readContracts={readContracts}
               blockExplorer={blockExplorer}
-              ownerEvents={ownerEvents}
+              updateFrontendEvents={updateFrontendEvents}
               signaturesRequired={signaturesRequired}
             />
           </Route>
@@ -331,7 +334,7 @@ function App(props) {
               writeContracts={writeContracts}
               readContracts={readContracts}
               blockExplorer={blockExplorer}
-              ownerEvents={ownerEvents}
+              updateFrontendEvents={updateFrontendEvents}
               signaturesRequired={signaturesRequired}
             />
           </Route>
@@ -348,7 +351,7 @@ function App(props) {
               writeContracts={writeContracts}
               readContracts={readContracts}
               blockExplorer={blockExplorer}
-              ownerEvents={ownerEvents}
+              updateFrontendEvents={updateFrontendEvents}
               signaturesRequired={signaturesRequired}
             />
           </Route>
@@ -365,7 +368,7 @@ function App(props) {
               writeContracts={writeContracts}
               readContracts={readContracts}
               blockExplorer={blockExplorer}
-              ownerEvents={ownerEvents}
+              updateFrontendEvents={updateFrontendEvents}
               signaturesRequired={signaturesRequired}
             />
           </Route>
@@ -382,7 +385,7 @@ function App(props) {
               writeContracts={writeContracts}
               readContracts={readContracts}
               blockExplorer={blockExplorer}
-              ownerEvents={ownerEvents}
+              updateFrontendEvents={updateFrontendEvents}
               signaturesRequired={signaturesRequired}
             />
           </Route>

@@ -36,6 +36,8 @@ contract MultiSigService {
     uint public currentNonce;
     uint public chainId;
 
+    event UpdateFrontend();
+
     constructor(uint argChainId, uint argInitialNonce)
     {
         currentNonce = argInitialNonce;
@@ -119,6 +121,7 @@ contract MultiSigService {
         }
         //register the nonce to the creator of the multisig instance
         ownerInfoColl[msg.sender].push(currentNonce);
+        emit UpdateFrontend();
         return currentNonce++;
     }
 
@@ -152,10 +155,12 @@ contract MultiSigService {
             {
                 multiSigColl[argNonce].signers[i].addr = argAddr;
                 //multiSigColl[argNonce].signers[i].hasSigned = false;
+                emit UpdateFrontend();
                 return;
             }
         }
         multiSigColl[argNonce].signers.push(SignerInfo(argAddr, false));
+        emit UpdateFrontend();
     }
 
     function removeSigner(uint argNonce, address argSignerAddr, uint8 argQtyReqSig) public onlyOwner(argNonce)
@@ -168,6 +173,7 @@ contract MultiSigService {
 
         //remove signer address to nonce mapping
         removeSignerFromNonce(argNonce, argSignerAddr);
+        emit UpdateFrontend();
     }
 
     //check for this address to exist as a signer and if so add signature
@@ -184,6 +190,7 @@ contract MultiSigService {
         console.log("indexOfSigner = ", indexOfSigner);
         require(type(uint).max != indexOfSigner, "this is not a singers signature");
         multiSigColl[argNonce].signers[indexOfSigner].hasSigned = true;
+        emit UpdateFrontend();
     }
 
     //todo remove after testing
@@ -211,6 +218,7 @@ contract MultiSigService {
         (bool success, bytes memory result) = multiSigColl[argNonce].to.call{value: multiSigColl[argNonce].amount}("");
         require(success, "executeTransaction: failed to transfer value for this multisig");
         multiSigColl[argNonce].isCompleted = true;
+        emit UpdateFrontend();
     }
 
     receive() external payable 

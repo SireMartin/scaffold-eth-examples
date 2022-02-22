@@ -13,14 +13,13 @@ import { useContractLoader, useContractExistsAtAddress } from "../hooks";
 
 const { Option } = Select;
 
-export default function Create({contractName, ownerEvents, signaturesRequired, address, userProvider, mainnetProvider, localProvider, yourLocalBalance, price, tx, readContracts, writeContracts, blockExplorer }) {
+export default function Create({contractName, updateFrontendEvents, signaturesRequired, address, userProvider, mainnetProvider, localProvider, yourLocalBalance, price, tx, readContracts, writeContracts, blockExplorer }) {
 
   const history = useHistory();
 
-  const [triggerRendering, setTriggerRendering] = useState();
   const [signerToAdd, setSignerToAdd] = useState();
   const [addedSignerColl, setAddedSignerColl] = useState([]);
-
+  
   const [rewardReceiver, setRewardReceiver] = useLocalStorage("rewardReceiver");
   const [challengeDescription, setChallengeDescription] = useLocalStorage("newChallengeDescription");
   const [rewardValue, setRewardValue] = useLocalStorage("rewardValue");

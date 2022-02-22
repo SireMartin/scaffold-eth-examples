@@ -4,28 +4,11 @@ import { useContractExistsAtAddress } from "../hooks";
 
 const { Option } = Select;
 
-export default function Send({contractName, ownerEvents, signaturesRequired, address, userProvider, mainnetProvider, localProvider, yourLocalBalance, price, tx, readContracts, writeContracts, blockExplorer }) {
+export default function Send({contractName, updateFrontendEvents, signaturesRequired, address, userProvider, mainnetProvider, localProvider, yourLocalBalance, price, tx, readContracts, writeContracts, blockExplorer }) {
 
-  const [triggerRendering, setTriggerRendering] = useState();
   const [nonce, setNonce] = useState("");
   const [signature, setSignature] = useState("");
 
-  //wordt uitgevoerd bij mounten en unmounten deze service component
-  useEffect(() => {
-    async function fetchData(){
-      if(readContracts && readContracts[contractName]){
-        
-      }
-    }
-    fetchData();
-  }, [triggerRendering]);
-
-  const contractIsDeployed = useContractExistsAtAddress(userProvider, address);
-
-  if(!contractIsDeployed)
-  {
-    return <div>Loading...</div>
-  }
   return (
     <div style={{ margin: "auto", width: "40vw" }}>
 
@@ -55,7 +38,6 @@ export default function Send({contractName, ownerEvents, signaturesRequired, add
               tx(writeContracts[contractName].sign(nonce, signature));
               setNonce("");
               setSignature("");
-              setTriggerRendering(triggerRendering + 1);
             }}>Send Signature
           </Button>
         </div>

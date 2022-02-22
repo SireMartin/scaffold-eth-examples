@@ -6,7 +6,7 @@ import Modal from "antd/lib/modal/Modal";
 
 const { Option } = Select;
 
-export default function Manage({contractName, ownerEvents, signaturesRequired, address, userProvider, mainnetProvider, localProvider, yourLocalBalance, price, tx, readContracts, writeContracts, blockExplorer }) {
+export default function Manage({contractName, updateFrontendEvents, signaturesRequired, address, userProvider, mainnetProvider, localProvider, yourLocalBalance, price, tx, readContracts, writeContracts, blockExplorer }) {
 
   const [triggerRendering, setTriggerRendering] = useState("");
   const [activeMultiSigColl, setActiveMultiSigColl] = useState([]);
@@ -28,7 +28,7 @@ export default function Manage({contractName, ownerEvents, signaturesRequired, a
         {
           var iterMultiSig = await readContracts[contractName].multiSigColl(iterNonce);
           console.log("iterMultiSig = ", iterMultiSig);
-          if(!iterMultiSig.isCompleted) //isCompleted
+          if(!iterMultiSig.isCompleted)
           {
             var iterMultiSigSigners = await readContracts[contractName].getSigners(iterNonce);
             console.log("iterMultiSigSigners =", iterMultiSigSigners);
@@ -43,12 +43,13 @@ export default function Manage({contractName, ownerEvents, signaturesRequired, a
             console.log("activeSigners = ", activeSigners);
             _activeMultiSigColl.push({multisig: iterMultiSig, signers: activeSigners, nonce: iterNonce});
           }
+
+          setActiveMultiSigColl(_activeMultiSigColl);
         });
-        setActiveMultiSigColl(_activeMultiSigColl);
       }
     }
     fetchData();
-  }, [triggerRendering]);
+  }, [triggerRendering, updateFrontendEvents]);
 
   const showModal = () => {
     setIsModalVisible(true);

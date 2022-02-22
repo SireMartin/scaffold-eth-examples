@@ -10,11 +10,10 @@ import { useContractLoader, useContractExistsAtAddress } from "../hooks";
 
 const { Option } = Select;
 
-export default function Sign({contractName, ownerEvents, signaturesRequired, address, userProvider, mainnetProvider, localProvider, yourLocalBalance, price, tx, readContracts, writeContracts, blockExplorer }) {
+export default function Sign({contractName, updateFrontendEvents, signaturesRequired, address, userProvider, mainnetProvider, localProvider, yourLocalBalance, price, tx, readContracts, writeContracts, blockExplorer }) {
 
   const history = useHistory();
 
-  const [triggerRendering, setTriggerRendering] = useState();
   const [noncesToSign, setNoncesToSign] = useState([]);
   const [signedMultiSigInstances, setSignedMultiSigInstances] = useState([]);
   const [unsignedMultiSigInstances, setUnsignedMultiSigInstances] = useState([]);
@@ -65,15 +64,14 @@ export default function Sign({contractName, ownerEvents, signaturesRequired, add
               }
             });
           }
+          
+          setSignedMultiSigInstances(signedInstanceColl);
+          setUnsignedMultiSigInstances(unsignedInstanceColl);
         });
-        console.log("signed =   ", signedInstanceColl);
-        console.log("unsigned = ", unsignedInstanceColl);
-        setSignedMultiSigInstances(signedInstanceColl);
-        setUnsignedMultiSigInstances(unsignedInstanceColl);
       }
     }
     fetchData();
-  }, [triggerRendering]);
+  }, [updateFrontendEvents]);
 
   const contractIsDeployed = useContractExistsAtAddress(userProvider, address);
 

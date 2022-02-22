@@ -4,9 +4,8 @@ import { CheckCircleTwoTone, CloseCircleTwoTone } from '@ant-design/icons';
 import { useContractExistsAtAddress } from "../hooks";
 import { Address } from "../components";
 
-export default function Execute({contractName, ownerEvents, signaturesRequired, address, userProvider, mainnetProvider, localProvider, yourLocalBalance, price, tx, readContracts, writeContracts, blockExplorer }) {
+export default function Execute({contractName, updateFrontendEvents, signaturesRequired, address, userProvider, mainnetProvider, localProvider, yourLocalBalance, price, tx, readContracts, writeContracts, blockExplorer }) {
 
-  const [triggerRendering, setTriggerRendering] = useState();
   const [completedMultiSigColl, setCompletedMultiSigColl] = useState([]);
   const [actualMultiSigColl, setActualMultiSigColl] = useState([]);
 
@@ -49,14 +48,14 @@ export default function Execute({contractName, ownerEvents, signaturesRequired, 
           {
             _actualMultiSigColl.push({multisig: iterMultiSig, signers: activeSigners, qtySigned: qtySign, nonce: iterNonce});
           }
+          
+          setCompletedMultiSigColl(_completedMultiSigColl);
+          setActualMultiSigColl(_actualMultiSigColl);
         });
-
-        setCompletedMultiSigColl(_completedMultiSigColl);
-        setActualMultiSigColl(_actualMultiSigColl);
       }
     }
     fetchData();
-  }, [triggerRendering]);
+  }, [updateFrontendEvents]);
 
   const contractIsDeployed = useContractExistsAtAddress(userProvider, address);
 
