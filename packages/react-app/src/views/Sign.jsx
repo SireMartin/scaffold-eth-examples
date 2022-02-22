@@ -33,7 +33,7 @@ export default function Sign({contractName, updateFrontendEvents, signaturesRequ
         var unsignedInstanceColl = [];
         var signedInstanceColl = [];
         //iterate all nonces (= multisig instance keys) the user is signer of
-        _noncesToSign.forEach(async iterNonce =>
+        for(const iterNonce of _noncesToSign)
         {
           console.log("iter current nonce = ", iterNonce);
           //we iterate the signerhas the signer has not been removed from the multisig instance
@@ -47,7 +47,7 @@ export default function Sign({contractName, updateFrontendEvents, signaturesRequ
             var instanceSigningInfo = await readContracts[contractName].getSigners(iterNonce.nonce);
             var userHasSigned = false;
             //iterate the signers of the multisig instance, they have a boolean about the signing status
-            instanceSigningInfo.forEach(iterSigningInfo =>
+            for(const iterSigningInfo of instanceSigningInfo)
             {
               //if the client address, add to structures for use in view (if the address is 0, the signer has been removed from the multisig instance)
               if(iterSigningInfo.addr == address)
@@ -62,12 +62,11 @@ export default function Sign({contractName, updateFrontendEvents, signaturesRequ
                   unsignedInstanceColl.push({multisig: instance, nonce: iterNonce.nonce});
                 }
               }
-            });
+            }
           }
-          
-          setSignedMultiSigInstances(signedInstanceColl);
-          setUnsignedMultiSigInstances(unsignedInstanceColl);
-        });
+        }
+        setUnsignedMultiSigInstances(unsignedInstanceColl);
+        setSignedMultiSigInstances(signedInstanceColl);
       }
     }
     fetchData();

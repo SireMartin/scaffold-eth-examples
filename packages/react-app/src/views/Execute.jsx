@@ -19,7 +19,7 @@ export default function Execute({contractName, updateFrontendEvents, signaturesR
         var _completedMultiSigColl = [];
         var _actualMultiSigColl = [];
 
-        ownedNonces.forEach(async iterNonce =>
+        for(const iterNonce of ownedNonces)
         {
           var iterMultiSig = await readContracts[contractName].multiSigColl(iterNonce);
           var iterMultiSigSigners = await readContracts[contractName].getSigners(iterNonce);
@@ -28,7 +28,7 @@ export default function Execute({contractName, updateFrontendEvents, signaturesR
 
           var qtySign = 0;
           var activeSigners = [];
-          iterMultiSigSigners.forEach(iterSigner =>
+          for(const iterSigner of iterMultiSigSigners)
           {
             if(iterSigner.address != 0)
             {
@@ -39,7 +39,7 @@ export default function Execute({contractName, updateFrontendEvents, signaturesR
                 ++qtySign;
               }
             }
-          });
+          }
           if(iterMultiSig.isCompleted)
           {
             _completedMultiSigColl.push({multisig: iterMultiSig, signers: activeSigners, qtySigned: qtySign, nonce: iterNonce});
@@ -48,10 +48,9 @@ export default function Execute({contractName, updateFrontendEvents, signaturesR
           {
             _actualMultiSigColl.push({multisig: iterMultiSig, signers: activeSigners, qtySigned: qtySign, nonce: iterNonce});
           }
-          
-          setCompletedMultiSigColl(_completedMultiSigColl);
-          setActualMultiSigColl(_actualMultiSigColl);
-        });
+        }
+        setCompletedMultiSigColl(_completedMultiSigColl);
+        setActualMultiSigColl(_actualMultiSigColl);
       }
     }
     fetchData();

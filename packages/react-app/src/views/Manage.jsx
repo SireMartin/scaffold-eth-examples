@@ -24,7 +24,7 @@ export default function Manage({contractName, updateFrontendEvents, signaturesRe
         console.log("address = ", address);
         var ownedNonces = await readContracts[contractName].getOwnedNonces(address);
         console.log("ownedNonces = ", ownedNonces);
-        ownedNonces.forEach(async iterNonce => 
+        for(const iterNonce of ownedNonces)
         {
           var iterMultiSig = await readContracts[contractName].multiSigColl(iterNonce);
           console.log("iterMultiSig = ", iterMultiSig);
@@ -43,13 +43,12 @@ export default function Manage({contractName, updateFrontendEvents, signaturesRe
             console.log("activeSigners = ", activeSigners);
             _activeMultiSigColl.push({multisig: iterMultiSig, signers: activeSigners, nonce: iterNonce});
           }
-
-          setActiveMultiSigColl(_activeMultiSigColl);
-        });
+        }
+        setActiveMultiSigColl(_activeMultiSigColl);
       }
     }
     fetchData();
-  }, [triggerRendering, updateFrontendEvents]);
+  }, [updateFrontendEvents]);
 
   const showModal = () => {
     setIsModalVisible(true);
@@ -64,8 +63,6 @@ export default function Manage({contractName, updateFrontendEvents, signaturesRe
     {
       tx(writeContracts[contractName].removeSigner(selectedNonce, selectedSigner, qtyRequiredSigs));
     }
-    var someVar = [];
-    setTriggerRendering(someVar);
     setIsModalVisible(false);
   };
 
