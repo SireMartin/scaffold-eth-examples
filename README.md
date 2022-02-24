@@ -1,234 +1,53 @@
 
 # 🏗 scaffold-eth - Meta Multi Signature Wallet
 
-> an off-chain signature based multi sig wallet
+> a multi-tenant multi-sig contract
 
 ---
----
 
-# 🏃‍♀️ Quick Start
+The goal of this contract is that anyone should be able to create a job to someone and upon succesful completion of the job, a reward is given. The creator of the multisig instance has a lot of coins but signers have none. Signers have to check if the job has been completed and if so, they send a signature of the relevant data to someone else (for example the creator) to put it on chain. When enough signers have done so, the multisig can be executed and the reward is given.
 
-required: [Node](https://nodejs.org/dist/latest-v12.x/) plus [Yarn](https://classic.yarnpkg.com/en/docs/install/) and [Git](https://git-scm.com/downloads)
-
-
-```bash
-git clone https://github.com/scaffold-eth/scaffold-eth-examples meta-multi-sig
-
-cd meta-multi-sig
-
-git checkout meta-multi-sig
-```
-
-```bash
-
-yarn install
-
-```
-
-```bash
-
-yarn start
-
-```
-
-> in a second terminal window:
-
-```bash
-cd scaffold-eth
-yarn chain
-
-```
-
-
-🔏 Edit your smart contract `MetaMultiSigWallet.sol` in `packages/hardhat/contracts`
-
-📝 Edit your frontend `App.jsx` in `packages/react-app/src`
-
-💼 Edit your deployment script `deploy.js` in `packages/hardhat/scripts`
-
-📱 Open http://localhost:3000 to see the app
-
-> in a third terminal window:
-
-```bash
-yarn backend
-
-```
-
-🔧 Configure your deployment in `packages/hardhat/scripts/deploy.js`
-
-> Edit the chainid, your owner addresses, and the number of signatures required:
-
-![image](https://user-images.githubusercontent.com/2653167/99156751-bfc59b00-2680-11eb-8d9d-e33777173209.png)
-
-
-
-> in a fourth terminal deploy with your frontend address as one of the owners:
-
-```bash
-
-yarn deploy
-
-```
-
-
-> Use the faucet wallet to send your multi-sig contract some funds:
-
-![image](https://user-images.githubusercontent.com/31567169/118389510-53315600-b63b-11eb-9daf-f0aaa479a23e.png)
-
-> To add new owners, use the "Owners" tab:
-
-
-![image](https://user-images.githubusercontent.com/31567169/118389556-896ed580-b63b-11eb-8ed6-c1e690778c8e.png)
-
-This will take you to a populated transaction create page:
-
-![image](https://user-images.githubusercontent.com/31567169/118389576-9986b500-b63b-11eb-8411-c227b148992a.png)
-
-
-
-
-> Create & sign the new transaction:
-
-![image](https://user-images.githubusercontent.com/31567169/118389603-ae634880-b63b-11eb-968f-ca78c2456ddb.png)
-
-
-You will see the new transaction in the pool (this is all off-chain):
-
-![image](https://user-images.githubusercontent.com/31567169/118389616-bd49fb00-b63b-11eb-82f7-f65ca2ee7e80.png)
-
-
-Click on the ellipsses button [...] to read the details of the transaction
-
-
-![image](https://user-images.githubusercontent.com/31567169/118389642-d6eb4280-b63b-11eb-9676-da7e7afc5614.png)
-
-
-
-> Give your account some gas at the faucet and execute the transaction
-
-The transction will appear as "executed" on the front page:
-
-![image](https://user-images.githubusercontent.com/31567169/118389655-e8cce580-b63b-11eb-8428-913c6f39e48f.png)
-
-
-
-> Create a transaction to send some funds to your frontend account:
-
-![image](https://user-images.githubusercontent.com/31567169/118389693-0ef28580-b63c-11eb-95d9-c5f397bf5972.png)
-
-
-
-
-This time we will need a second signature:
-
-![image](https://user-images.githubusercontent.com/31567169/118389716-3cd7ca00-b63c-11eb-959e-d46ffe31e62e.png)
-
-
-
-> Sign the transacton with enough owners:
-![image](https://user-images.githubusercontent.com/31567169/118389773-90e2ae80-b63c-11eb-9658-e9c411542f33.png)
-
-
-(You'll notice you don't need ⛽️gas to sign transactions.)
-
-> Execute the transction to transfer the funds:
-
-
-
-![image](https://user-images.githubusercontent.com/31567169/118389808-bff92000-b63c-11eb-9107-9af5b77d4e20.png)
-
-
-(You might need to trigger a new block by sending yourself some faucet funds or something. HartHat blocks only get mined when there is a transaction.)
-
-💼 Edit your deployment script `deploy.js` in `packages/hardhat/scripts`
-
-🔏 Edit your contracts form, `MetaMultiSigWallet.sol` in `packages/hardhat/contracts`
-
-📝 Edit your frontend in `packages/react-app/src/views`
-
-## ⚔️ Side Quests
-
-#### 🐟 Create custom signer roles for your Wallet
-You may not want every signer to create new transfers, only allow them to sign existing transactions or a mega-admin role who will be able to veto any transaction.
-
-#### 😎 Integrate this MultiSig wallet into other branches like nifty-ink  
-Make a MultiSig wallet to store your precious doodle-NFTs!? 
+The goal is also to provide a personal experience and only show relevant data for the connected user (like the speedrunethereum site). In other words: the content of the webpage is adapted to the connected address and only shows the useful information for that address. If you created a contract, you can add and remove signers, send signatures on chain on behalf of the singers or even sign yourself and execute the multisig contract to transfer the reward. If you are a sender, you can only sign or send signatures.
 
 ---
 
-## 📡 Deploy the wallet!
+I have a Chrome with MetaMask and .1 ether for the contract creation and a FireFox with a burner wallet of 0 funds. Lets create a new multisig instance in the "create" tab.
 
-🛰 Ready to deploy to a testnet?
+Let's create a job to let the firefox user drill a hole in the ground and get a reward for it. Both the contract creator and the job executor are the signers, which is not correct, but good for demo purpose.
 
-> Change the `defaultNetwork` in `packages/hardhat/hardhat.config.js`
+![image](https://user-images.githubusercontent.com/5307283/155609039-6e4ed762-aa14-4bfd-afbe-6838cce4e936.png)
 
-![image](https://user-images.githubusercontent.com/2653167/109538427-4d38c980-7a7d-11eb-878b-b59b6d316014.png)
+In the "manage" tab, the multisig creator can add and remove signers.
 
-🔐 Generate a deploy account with `yarn generate`
+![image](https://user-images.githubusercontent.com/5307283/155609444-163964ba-20c2-43e0-9ef3-3fc014fdd4fb.png)
 
-![image](https://user-images.githubusercontent.com/2653167/109537873-a2c0a680-7a7c-11eb-95de-729dbf3399a3.png)
+If we take a look at the execute tab, we see nothing has been signed yet and the execute button is not visible.
 
+![image](https://user-images.githubusercontent.com/5307283/155609569-8e5a6bc6-452c-4824-a776-e9b6c06452bb.png)
 
-👛 View your deployer address using `yarn account` (You'll need to fund this account. Hint: use an [instant wallet](https://instantwallet.io) to fund your account via QR code)
+The firefox user has seen the hole in the ground and visits the "sign" tab.
 
-![image](https://user-images.githubusercontent.com/2653167/109537339-ff6f9180-7a7b-11eb-85b0-46cd72311d12.png)
+![image](https://user-images.githubusercontent.com/5307283/155610302-fc61fd1a-a46d-4a7a-bd04-9f7384e2c31a.png)
 
-👨‍🎤 Deploy your wallet:
+But has no money and copies the signature and nonce (multi sig key) and sends it to the contract creator.
 
-```bash
-yarn deploy
-```
----
+![image](https://user-images.githubusercontent.com/5307283/155610208-de96d229-50e2-4df4-a49a-66f703edec8a.png)
 
-> ✏️ Edit your frontend `App.jsx` in `packages/react-app/src` to change the `targetNetwork` to wherever you deployed your contract:
+The chrome user receives the signature and nonce by telegram and pastes it in the "send" tab fields.
 
-![image](https://user-images.githubusercontent.com/2653167/109539175-3e9ee200-7a7e-11eb-8d26-3b107a276461.png)
+![image](https://user-images.githubusercontent.com/5307283/155610511-0c69bc79-fc9b-43e4-abc8-387cd3c42cee.png)
 
-You should see the correct network in the frontend:
+Now the creator sees in the "execute" tab the firefox user signature has been accepted.
 
-![image](https://user-images.githubusercontent.com/2653167/109539305-655d1880-7a7e-11eb-9385-c169645dc2b5.png)
+![image](https://user-images.githubusercontent.com/5307283/155610689-43feb212-c32a-4fa7-891a-2f1f5226b3ec.png)
 
-> Also change the poolServerUrl constant to your deployed backend (via yarn backend)
+The chrome user both signs and sends the signature on-chain in the "sign" tab. This is possible if you are coined.
 
-![image](https://user-images.githubusercontent.com/31567169/116589184-6f3fb280-a92d-11eb-8fff-d1e32b8359ff.png)
+![image](https://user-images.githubusercontent.com/5307283/155611022-52b8713e-8a40-4493-987a-1dbd294bab08.png)
 
-Alternatively you can use the pool server url in the above screenshot
+The creator can now execute the multisig.
 
+![image](https://user-images.githubusercontent.com/5307283/155611127-c71fa1a8-41e7-4644-aec2-f29fb08e44b5.png)
 
----
+The firefox user received the reward.
 
-#### 🔶 Infura
-
-> You will need to get a key from [infura.io](https://infura.io) and paste it into `constants.js` in `packages/react-app/src`:
-
-![image](https://user-images.githubusercontent.com/2653167/109541146-b5d57580-7a80-11eb-9f9e-04ea33f5f45a.png)
-
----
-
-## 🛳 Ship the app!
-
-> ⚙️ build and upload your frontend and share the url with your friends...
-
-```bash
-
-# build it:
-
-yarn build
-
-# upload it:
-
-yarn surge
-
-OR
-
-yarn s3
-
-OR
-
-yarn ipfs
-```
-
-![image](https://user-images.githubusercontent.com/2653167/109540985-7575f780-7a80-11eb-9ebd-39079cc2eb55.png)
-
-> 👩‍❤️‍👨 Share your public url with friends, add signers and send some tasty ETH to a few lucky ones 😉!!
