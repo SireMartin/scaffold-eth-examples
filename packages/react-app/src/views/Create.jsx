@@ -27,113 +27,124 @@ export default function Create({contractName, updateFrontendEvents, signaturesRe
 
   return (
     <div style={{ margin: "auto", width: "40vw" }}>
+      <Card title="Creat a new MultiSig instance">
+        <div>Job Description:</div> 
+        <div style={{margin:8,padding:8}}>
+          <Input
+            ensProvider={mainnetProvider}
+            placeholder="description of the job"
+            value={challengeDescription}
+            onChange={(e)=>{setChallengeDescription(e.target.value)}}
+          />
+        </div>
 
-      <div style={{margin:8,padding:8}}>
-        <Input
-          ensProvider={mainnetProvider}
-          placeholder="challenge description"
-          value={challengeDescription}
-          onChange={(e)=>{setChallengeDescription(e.target.value)}}
-        />
-      </div>
+        <div>Reward Receiver:</div>
+        <div style={{margin:8,padding:8}}>
+          <AddressInput
+            autoFocus
+            ensProvider={mainnetProvider}
+            placeholder="reward receiver"
+            value={rewardReceiver}
+            onChange={setRewardReceiver}
+          />
+        </div>
 
-      <div style={{margin:8,padding:8}}>
-        <AddressInput
-          autoFocus
-          ensProvider={mainnetProvider}
-          placeholder="reward receiver"
-          value={rewardReceiver}
-          onChange={setRewardReceiver}
-        />
-      </div>
+        <div>Reward Value (wei):</div>
+        <div style={{ margin: 2 }}>
+          <Input
+            placeholder="reward value (wei)"
+            onChange={e => setRewardValue(e.target.value)}
+            value={rewardValue}
+            addonAfter={
+              <div>
+                <Tooltip placement="right" title={" * 10^18 "}>
+                  <div
+                    type="dashed"
+                    style={{ cursor: "pointer" }}
+                    onClick={async () => {
+                      let floatValue = parseFloat(rewardValue)
+                      if(floatValue) setRewardValue("" + floatValue * 10 ** 18);
+                    }}
+                  >
+                    ✳️
+                  </div>
+                </Tooltip>
+              </div>
+            }
+          />
+        </div>
 
-      <div style={{margin:8,padding:8}}>
-        <AddressInput
-          autoFocus
-          ensProvider={mainnetProvider}
-          placeholder="add signer"
-          value={signerToAdd}
-          onChange={setSignerToAdd}
-        />
-      </div>
+        <Divider />
 
-      <div style={{margin:8,padding:8}}>
-        <Button onClick={()=>{
-          console.log("signersToAdd before = ", addedSignerColl);
-          var temp = addedSignerColl;
-          temp.push(signerToAdd);
-          console.log("temp = ", temp);
-          setAddedSignerColl(temp);
-          console.log("signersToAdd after  = ", addedSignerColl);
-          setSignerToAdd(null)
-        }}>
-        Add Signer
-        </Button>
-      </div>
+        <div>Signers Section</div>
 
-      <div>
-        <List
-          dataSource={addedSignerColl}
-          renderItem={item => (
-            <List.Item>
-              <Address address={item} ensProvider={mainnetProvider} />
-            </List.Item>
-          )}
-        />
-      </div>
+        <Divider/>
 
-      <div>
-        addedSignerColl = {JSON.stringify(addedSignerColl)}
-      </div>
-      
-      <div style={{ margin: 2 }}>
-        <Input
-          placeholder="reward value"
-          onChange={e => setRewardValue(e.target.value)}
-          value={rewardValue}
-          addonAfter={
-            <div>
-              <Tooltip placement="right" title={" * 10^18 "}>
-                <div
-                  type="dashed"
-                  style={{ cursor: "pointer" }}
-                  onClick={async () => {
-                    let floatValue = parseFloat(rewardValue)
-                    if(floatValue) setRewardValue("" + floatValue * 10 ** 18);
-                  }}
-                >
-                  ✳️
-                </div>
-              </Tooltip>
-            </div>
-          }
-        />
-      </div>
+        <div>Qty of signatures required:</div>
+        <div style={{margin:8,padding:8}}>
+          <Input
+            ensProvider={mainnetProvider}
+            placeholder="qty signature required"
+            value={qtySignatureRequired}
+            onChange={(e)=>{setQtySignatureRequired(e.target.value)}}
+          />
+        </div>
 
-      <div style={{margin:8,padding:8}}>
-        <Input
-          ensProvider={mainnetProvider}
-          placeholder="qty signature required"
-          value={qtySignatureRequired}
-          onChange={(e)=>{setQtySignatureRequired(e.target.value)}}
-        />
-      </div>
+        <div>Paste signer addresses and add to signers collection:</div>
+        <div style={{margin:8,padding:8}}>
+          <AddressInput
+            autoFocus
+            ensProvider={mainnetProvider}
+            placeholder="add signer"
+            value={signerToAdd}
+            onChange={setSignerToAdd}
+          />
+        </div>
 
-      <div style={{margin:8,padding:8}}>
-        <Button onClick={async ()=>{
-          console.log("rewardReceiver, rewardValue, qtySignatureRequired = ", rewardReceiver, rewardValue);
-          //clear signer for next multisig instance creation
-          setSignerToAdd(null)
-          setAddedSignerColl([]);
-          const overrides = {};
-          overrides.value = parseUnits("" + rewardValue, "wei");
-          tx(
-            writeContracts[contractName].addMultiSig(rewardReceiver, qtySignatureRequired, addedSignerColl, challengeDescription, overrides)
-          );
-        }}>
-        Create New MultiSig Instance
-        </Button>
-      </div>
+        <div style={{margin:8,padding:8}}>
+          <Button onClick={()=>{
+            var temp = addedSignerColl;
+            temp.push(signerToAdd);
+            setAddedSignerColl(addedSignerColl);
+            setSignerToAdd(null)
+          }}>
+          Add Signer
+          </Button>
+        </div>
+
+        <div>
+          <List
+            dataSource={addedSignerColl}
+            renderItem={item => (
+              <List.Item>
+                <Address address={item} ensProvider={mainnetProvider} />
+              </List.Item>
+            )}
+          />
+        </div>
+
+        <Divider />
+
+        <div style={{margin:8,padding:8}}>
+          <Button onClick={async ()=>{
+            console.log("rewardReceiver, rewardValue, qtySignatureRequired = ", rewardReceiver, rewardValue);
+            //clear signer for next multisig instance creation
+            setSignerToAdd(null)
+            setAddedSignerColl([]);
+            const overrides = {};
+            overrides.value = parseUnits("" + rewardValue, "wei");
+            tx(
+              writeContracts[contractName].addMultiSig(rewardReceiver, qtySignatureRequired, addedSignerColl, challengeDescription, overrides)
+            );
+            setRewardReceiver("");
+            setQtySignatureRequired("");
+            setChallengeDescription("");
+            setRewardValue("");
+          }}>
+          Create New MultiSig Instance
+          </Button>
+        </div>
+      </Card>
     </div>
   );
 }

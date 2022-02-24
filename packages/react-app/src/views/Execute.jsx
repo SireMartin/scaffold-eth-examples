@@ -3,6 +3,7 @@ import { Select, Button, List, Divider, Input, Card, DatePicker, Slider, Switch,
 import { CheckCircleTwoTone, CloseCircleTwoTone } from '@ant-design/icons';
 import { useContractExistsAtAddress } from "../hooks";
 import { Address } from "../components";
+import { formatEther } from "@ethersproject/units";
 
 export default function Execute({contractName, updateFrontendEvents, signaturesRequired, address, userProvider, mainnetProvider, localProvider, yourLocalBalance, price, tx, readContracts, writeContracts, blockExplorer }) {
 
@@ -64,58 +65,63 @@ export default function Execute({contractName, updateFrontendEvents, signaturesR
   }
   return (
     <div style={{ margin: "auto", width: "40vw" }}>
-      <div>Still To Execute</div>
+      <h1>Still To Execute</h1>
       <List 
+        bordered
         dataSource={actualMultiSigColl}
         renderItem={item => (
           <List.Item>
-            {item.multisig.shortDescription} ({item.qtySigned} / {item.multisig.qtyReqSig})
-            { item.qtySigned >= item.multisig.qtyReqSig &&
-              <Button onClick={ () => {
-                console.log("Calling execute for nonce ", item.nonce);
-                tx(writeContracts[contractName].execute(item.nonce));
-              }}>
-                Execute
-              </Button>
-            }
-            <List
-              dataSource={item.signers}
-              renderItem={signer => (
-                <List.Item>
-                    <Address address={signer.addr} ensProvider={mainnetProvider} />
-                    { signer.hasSigned && 
-                      <CheckCircleTwoTone twoToneColor="#52c41a" width="3em" height="3em" />
-                    }
-                    { !signer.hasSigned &&
-                      <CloseCircleTwoTone twoToneColor="red" width="3em" height="3em" />
-                    }
-                </List.Item>
-              )}
-            />
+            <Card style={{width: '100%'}} title={item.multisig.shortDescription + " (" + item.qtySigned + " signatures of " + item.multisig.qtyReqSig + ")"}>
+              <div>{formatEther(item.multisig.amount)} ETH to <Address address={item.multisig.to} userProvider={mainnetProvider} /></div>
+              { item.qtySigned >= item.multisig.qtyReqSig &&
+                <Button onClick={ () => {
+                  console.log("Calling execute for nonce ", item.nonce);
+                  tx(writeContracts[contractName].execute(item.nonce));
+                }}>
+                  Execute
+                </Button>
+              }
+              <List
+                dataSource={item.signers}
+                renderItem={signer => (
+                  <List.Item>
+                      <Address address={signer.addr} ensProvider={mainnetProvider} />
+                      { signer.hasSigned && 
+                        <CheckCircleTwoTone twoToneColor="#52c41a" width="3em" height="3em" />
+                      }
+                      { !signer.hasSigned &&
+                        <CloseCircleTwoTone twoToneColor="red" width="3em" height="3em" />
+                      }
+                  </List.Item>
+                )}
+              />
+            </Card>
           </List.Item>
         )}
       />
 
-      <div>Has Been Executed</div>
+      <h1>Has Been Executed</h1>
       <List 
         dataSource={completedMultiSigColl}
         renderItem={item => (
           <List.Item>
-            {item.multisig.shortDescription} ({item.qtySigned} / {item.multisig.qtyReqSig})
-            <List
-              dataSource={item.signers}
-              renderItem={signer => (
-                <List.Item>
-                    <Address address={signer.addr} ensProvider={mainnetProvider} />
-                    { signer.hasSigned && 
-                      <CheckCircleTwoTone twoToneColor="#52c41a" width="3em" height="3em" />
-                    }
-                    { !signer.hasSigned &&
-                      <CloseCircleTwoTone twoToneColor="red" width="3em" height="3em" />
-                    }
-                </List.Item>
-              )}
-            />
+            <Card style={{width: '100%'}} title={item.multisig.shortDescription + " (" + item.qtySigned + " signatures of " + item.multisig.qtyReqSig + ")"}>
+              <div>{formatEther(item.multisig.amount)} ETH to <Address address={item.multisig.to} userProvider={mainnetProvider} /></div>
+              <List
+                dataSource={item.signers}
+                renderItem={signer => (
+                  <List.Item>
+                      <Address address={signer.addr} ensProvider={mainnetProvider} />
+                      { signer.hasSigned && 
+                        <CheckCircleTwoTone twoToneColor="#52c41a" width="3em" height="3em" />
+                      }
+                      { !signer.hasSigned &&
+                        <CloseCircleTwoTone twoToneColor="red" width="3em" height="3em" />
+                      }
+                  </List.Item>
+                )}
+              />
+            </Card>
           </List.Item>
         )}
       />

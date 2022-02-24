@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Select, Button, List, Divider, Input, Card, DatePicker, Slider, Switch, Progress, Spin, Tooltip, Statistic } from "antd";
 import { useContractExistsAtAddress } from "../hooks";
 import { Address, AddressInput } from "../components";
+import { formatEther } from "@ethersproject/units";
 import Modal from "antd/lib/modal/Modal";
 
 const { Option } = Select;
@@ -80,13 +81,18 @@ export default function Manage({contractName, updateFrontendEvents, signaturesRe
     <div style={{ margin: "auto", width: "40vw" }}>
       <Modal title={selectedAction + " Signer"} visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
       { selectedAction == "Add" &&
-        <AddressInput
-        autoFocus
-        ensProvider={mainnetProvider}
-        placeholder="address signer"
-        value={selectedSigner}
-        onChange={setSelectedSigner}
-      /> }
+        <div>
+          <div>New Signer Address:</div>
+          <AddressInput
+          autoFocus
+          ensProvider={mainnetProvider}
+          placeholder="address signer"
+          value={selectedSigner}
+          onChange={setSelectedSigner}
+        />
+        </div>
+         }
+      <div>New qty of signature:</div>
       <Input
         ensProvider={mainnetProvider}
         placeholder="new qty required sigs"
@@ -97,24 +103,20 @@ export default function Manage({contractName, updateFrontendEvents, signaturesRe
       <List
         dataSource={activeMultiSigColl}
         renderItem={item => (
-          <div>
-            <div>{item.multisig[6]}</div>
-
-            <div style={{margin:8,padding:8}}>
-              <Button onClick={() => {
-                setSelectedNonce(item.nonce);
-                setSelectedAction("Add");
-                setIsModalVisible(true);
-              }}>
-                Add Signer
-              </Button>
-
-            </div>
+          <Card title = {item.multisig.shortDescription}>
+            <div style={{margin:8,padding:8}}>{formatEther(item.multisig.amount)} ETH to <Address address={item.multisig.to} userProvider={mainnetProvider} /></div>
+            <Button onClick={() => {
+              setSelectedNonce(item.nonce);
+              setSelectedAction("Add");
+              setIsModalVisible(true);
+            }}>
+              Add Signer
+            </Button>
 
             <List
               dataSource={item.signers}
               renderItem={signerAddress =>(
-                <div>
+                <div style={{margin:8,padding:8}}>
                   <Address address={signerAddress} ensProvider={mainnetProvider} />
                   <Button onClick={() => {
                     setSelectedSigner(signerAddress);
@@ -127,7 +129,7 @@ export default function Manage({contractName, updateFrontendEvents, signaturesRe
                 </div>
               )}
             />
-          </div>
+          </Card>
         )}
       />
     </div>

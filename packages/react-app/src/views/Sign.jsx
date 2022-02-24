@@ -7,6 +7,7 @@ import { parseEther, formatEther, parseUnits } from "@ethersproject/units";
 import { ethers } from "ethers";
 import { useContractReader, useEventListener, useLocalStorage } from "../hooks";
 import { useContractLoader, useContractExistsAtAddress } from "../hooks";
+import { isTerminating } from "apollo-link/lib/linkUtils";
 
 const { Option } = Select;
 
@@ -80,17 +81,16 @@ export default function Sign({contractName, updateFrontendEvents, signaturesRequ
   }
   return (
     <div style={{ margin: "auto", width: "40vw" }}>
-      <div>noncesToSign = {JSON.stringify(noncesToSign)}</div>
 
-      <div>unsignedMultiSigInstances = {JSON.stringify(unsignedMultiSigInstances)}</div>
+      <h3>Unsigned MultiSig Instances:</h3>
       <List
         bordered
         dataSource={unsignedMultiSigInstances}
         renderItem={item => {
           console.log("iterItem = ", item);
           return (
-            <div>
-              <div>{item.multisig[6]} </div>
+            <Card title={item.multisig.shortDescription}>
+              <div style={{margin:8,padding:8}}>{formatEther(item.multisig.amount)} ETH to <Address address={item.multisig.to} userProvider={mainnetProvider} /></div>
               <Button onClick={async () =>{
                 var hash = await readContracts[contractName].calculateHash(item.nonce ,item.multisig[2], item.multisig[4]);
                 setCalculatedHash(hash);
@@ -116,23 +116,25 @@ export default function Sign({contractName, updateFrontendEvents, signaturesRequ
                     tx(writeContracts[contractName].sign(item.nonce, generatedSignature));
                     setGeneratedSignature("");
                     setCalculatedHash("");
-                    setNonceForGeneratedSignature(0)
+                    setNonceForGeneratedSignature(0);
                   }}>Send Signature</Button>
                 </div>
               }
-            </div>
+            </Card>
           );
         }}
       />
 
-      <div>signedMultiSigInstances = {JSON.stringify(signedMultiSigInstances)}</div>
+      <h3>Signed MultiSig Instances:</h3>
       <List
         bordered
         dataSource={signedMultiSigInstances}
         renderItem={item => {
-          return (
-            <div>{item.multisig.shortDescription} </div>
-          );
+          return(
+            <Card title={item.multisig.shortDescription}>
+              <div style={{margin:8,padding:8}}>{formatEther(item.multisig.amount)} ETH to <Address address={item.multisig.to} userProvider={mainnetProvider} /> </div>
+            </Card>
+          )
         }}
       />
     </div>

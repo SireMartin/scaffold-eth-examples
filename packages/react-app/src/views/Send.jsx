@@ -13,7 +13,7 @@ export default function Send({contractName, updateFrontendEvents, signaturesRequ
     <div style={{ margin: "auto", width: "40vw" }}>
 
       <div style={{margin:8,padding:8}}>
-        Nonce
+        Paste the nonce here:
         <Input
           ensProvider={mainnetProvider}
           placeholder="nonce"
@@ -23,7 +23,7 @@ export default function Send({contractName, updateFrontendEvents, signaturesRequ
       </div>
 
       <div style={{margin:8,padding:8}}>
-        Signature
+        Paste the signature here:
         <Input
           ensProvider={mainnetProvider}
           placeholder="signature"
