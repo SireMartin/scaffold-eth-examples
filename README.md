@@ -51,3 +51,4 @@ The creator can now execute the multisig.
 
 The firefox user received the reward.
 
+![image](https://user-images.githubusercontent.com/5307283/155611349-92e9053d-ae09-4f92-a610-8453eadb65b2.png)
