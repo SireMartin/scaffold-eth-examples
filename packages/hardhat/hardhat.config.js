@@ -333,6 +333,13 @@ task("accounts", "Prints the list of accounts", async (_, { ethers }) => {
   accounts.forEach((account) => console.log(account));
 });
 
+task("showPrivateKey", "show private key for account", async (_, { ethers }) => {
+  let mnemonic = fs.readFileSync("./mnemonic.txt").toString().trim();
+  let mnemonicWallet = ethers.Wallet.fromMnemonic(mnemonic);
+  console.log(mnemonicWallet.privateKey);
+}
+);
+
 task("blockNumber", "Prints the block number", async (_, { ethers }) => {
   const blockNumber = await ethers.provider.getBlockNumber();
   console.log(blockNumber);
